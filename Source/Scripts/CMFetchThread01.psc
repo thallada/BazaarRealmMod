@@ -1,0 +1,1 @@
+Scriptname CMFetchThread01 extends CMFetchThread
