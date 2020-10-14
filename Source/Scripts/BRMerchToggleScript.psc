@@ -16,13 +16,21 @@ Event OnActivate(ObjectReference akActionRef)
         BRQuestScript BRScript = BRQuest as BRQuestScript
         bool result = BRMerchandiseList.Toggle(BRScript.ApiUrl, BRScript.ApiKey, BRScript.MerchandiseListId, MerchantShelf, PlaceholderStatic, BRLinkMerchShelf, BRLinkMerchChest, BRLinkItemRef, BRLinkMerchToggle, BRLinkMerchNext, BRLinkMerchPrev)
         debug.Trace("BRMerchandiseList.Toggle result: " + result)
-        if result
-            while !BRMerchandiseList.Replace3D(MerchantShelf, PlaceholderStatic, BRLinkMerchShelf, BRLinkItemRef)
-                Debug.Trace("BRMerchandiseList.Replace3D returned false, waiting and trying again")
-                Utility.Wait(0.05)
-            endWhile
-        else
+        if !result
             Debug.MessageBox("Failed to load or clear shop merchandise. Please submit a bug on Nexus Mods with the contents of BazaarRealmPlugin.log and BazaarRealmClient.log usually located in C:\\Users\\<your user>\\Documents\\My Games\\Skyrim Special Edition\\SKSE.")
         endif
+    endif
+EndEvent
+
+Event OnLoadMerchandise(bool result)
+    debug.Trace("BRMerchToggleScript OnLoadMerchandise result: " + result)
+    if result
+        ObjectReference MerchantShelf = self.GetLinkedRef(BRLinkMerchShelf)
+        while !BRMerchandiseList.Replace3D(MerchantShelf, PlaceholderStatic, BRLinkMerchShelf, BRLinkItemRef)
+            Debug.Trace("BRMerchandiseList.Replace3D returned false, waiting and trying again")
+            Utility.Wait(0.05)
+        endWhile
+    else
+        Debug.MessageBox("Failed to load or clear shop merchandise. Please submit a bug on Nexus Mods with the contents of BazaarRealmPlugin.log and BazaarRealmClient.log usually located in C:\\Users\\<your user>\\Documents\\My Games\\Skyrim Special Edition\\SKSE.")
     endif
 EndEvent
