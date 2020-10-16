@@ -9,4 +9,4 @@ bool function Replace3D(ObjectReference merchantShelf, Form placeholderStatic, K
 
 Form function Buy(ObjectReference merchandisePlaceholder) global native
 
-int function Create(string apiUrl, string apiKey, int shopId, ObjectReference merchantChest) global native
+bool function Create(string apiUrl, string apiKey, int shopId, ObjectReference merchantChest) global native

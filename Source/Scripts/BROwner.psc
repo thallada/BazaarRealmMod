@@ -1,3 +1,3 @@
 scriptname BROwner
 
-int function Create(string apiUrl, string apiKey, string name, int modVersion) global native
+bool function Create(string apiUrl, string apiKey, string name, int modVersion, quest quest) global native

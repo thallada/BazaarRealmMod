@@ -71,6 +71,7 @@ endState
 state START_MOD
     event OnSelectST()
         if BR.StartMod()
+            Debug.Notification("Starting mod...")
             modStarted = true
             SetToggleOptionValueST(true, true)
             SetOptionFlagsST(OPTION_FLAG_DISABLED, true)
@@ -87,7 +88,7 @@ endState
 state SAVE_REFS
     event OnSelectST()
         if BR.SaveInteriorRefs()
-            debug.MessageBox("Successfully saved shop.")
+            Debug.Notification("Saving shop...")
         endif
     endEvent
 
@@ -99,7 +100,7 @@ endState
 state LOAD_REFS
     event OnSelectST()
         if BR.LoadInteriorRefs()
-            debug.MessageBox("Successfully loaded shop.")
+            Debug.Notification("Loading shop...")
         endif
     endEvent
 
@@ -127,3 +128,7 @@ state LOAD_MERCH
         SetInfoText("Load shop merchandise onto the merchant shelf of the shop.")
     endEvent
 endState
+
+event OnShopCreate(int result)
+    Debug.Trace("BRMCMConfigMenu OnShopCreate result: " + result)
+endEvent
