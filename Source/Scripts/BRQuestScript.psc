@@ -26,7 +26,9 @@ endEvent
 function Maintenance()
     Debug.Trace("BRQuestScript Maintenance")
     UILib = (Self as Form) as UILIB_1
-    BRClient.Init()
+    if !BRClient.Init()
+        Debug.MessageBox("Failed to initialize Bazaar Realm client. Please ensure that the folder Documents\\My Games\\Skyrim Special Edition\\SKSE exists and is accessible by Skyrim.")
+    endif
     int newVersion = GetVersion()
     if ModVersion < newVersion
         ModVersion = newVersion
