@@ -71,11 +71,25 @@ endState
 state START_MOD
     event OnSelectST()
         if BR.StartMod()
-            Debug.Notification("Starting mod...")
-            modStarted = true
-            SetToggleOptionValueST(true, true)
-            SetOptionFlagsST(OPTION_FLAG_DISABLED, true)
-            SetOptionFlagsST(OPTION_FLAG_DISABLED, true, "SERVER_URL_VALUE")
+            int attempts = 0
+            while BR.ShopId == 0 && !BR.StartModFailed && attempts < 100
+                attempts += 1
+                Utility.WaitMenuMode(0.1)
+            endWhile
+
+            if attempts >= 100
+                Debug.Trace("BRMCMConfigMenu StartMod failed. ShopId still unset after 100 polls (10 seconds)")
+            endif
+
+            if BR.StartModFailed
+                Debug.Trace("BRMCMConfigMenu StartMod failed. BR.StartModFailed == true")
+            else
+                Debug.Trace("BRMCMConfigMenu StartMod succeeded")
+                modStarted = true
+                SetToggleOptionValueST(true, true)
+                SetOptionFlagsST(OPTION_FLAG_DISABLED, true)
+                SetOptionFlagsST(OPTION_FLAG_DISABLED, true, "SERVER_URL_VALUE")
+            endif
         endif
         ForcePageReset()
     endEvent
@@ -87,9 +101,7 @@ endState
 
 state SAVE_REFS
     event OnSelectST()
-        if BR.SaveInteriorRefs()
-            Debug.Notification("Saving shop...")
-        endif
+        BR.SaveInteriorRefs()
     endEvent
 
     event OnHighlightST()
@@ -99,9 +111,7 @@ endState
 
 state LOAD_REFS
     event OnSelectST()
-        if BR.LoadInteriorRefs()
-            Debug.Notification("Loading shop...")
-        endif
+        BR.LoadInteriorRefs()
     endEvent
 
     event OnHighlightST()
@@ -128,7 +138,3 @@ state LOAD_MERCH
         SetInfoText("Load shop merchandise onto the merchant shelf of the shop.")
     endEvent
 endState
-
-event OnShopCreate(int result)
-    Debug.Trace("BRMCMConfigMenu OnShopCreate result: " + result)
-endEvent

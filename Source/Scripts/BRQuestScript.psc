@@ -11,6 +11,7 @@ int property ShopId auto
 int property InteriorRefListId = 29 auto ; TODO: temp fixing to id 20
 int property MerchandiseListId = 2 auto ; TODO: temp fixing to id 2
 ObjectReference property ShopXMarker auto
+bool property StartModFailed = false auto
 UILIB_1 property UILib auto
 
 int function GetVersion()
@@ -35,10 +36,12 @@ function Maintenance()
 endFunction
 
 bool function StartMod()
-    debug.Trace("BRQuestScript StartMod")
+    Debug.Trace("BRQuestScript StartMod")
+    StartModFailed = false
     bool result = BRClient.StatusCheck(ApiUrl, self)
     if !result
         Debug.MessageBox("Failed to initialize Bazaar Realm client. The API server might be down: " + ApiUrl)
+        StartModFailed = true
     endif
     return result
 endFunction
@@ -53,9 +56,11 @@ event OnStatusCheck(bool result)
         bool ownerResult = BROwner.Create(ApiUrl, ApiKey, playerName, ModVersion, self)
         if !ownerResult
             Debug.MessageBox("Failed to initialize Bazaar Realm client. Please submit a bug on Nexus Mods with the contents of BazaarRealmPlugin.log and BazaarRealmClient.log usually located in C:\\Users\\<your user>\\Documents\\My Games\\Skyrim Special Edition\\SKSE.")
+            StartModFailed = true
         endif
     else
         Debug.MessageBox("Failed to initialize Bazaar Realm client. The API server might be down: " + ApiUrl)
+        StartModFailed = true
     endif
 endEvent
 
@@ -67,9 +72,11 @@ event OnCreateOwner(int result)
         bool shopResult = BRShop.Create(ApiUrl, ApiKey, playerName + "'s Shop", "", self)
         if !shopResult
             Debug.MessageBox("Failed to initialize Bazaar Realm client. Please submit a bug on Nexus Mods with the contents of BazaarRealmPlugin.log and BazaarRealmClient.log usually located in C:\\Users\\<your user>\\Documents\\My Games\\Skyrim Special Edition\\SKSE.")
+            StartModFailed = true
         endif
     else
         Debug.MessageBox("Failed to initialize Bazaar Realm client. Please submit a bug on Nexus Mods with the contents of BazaarRealmPlugin.log and BazaarRealmClient.log usually located in C:\\Users\\<your user>\\Documents\\My Games\\Skyrim Special Edition\\SKSE.")
+        StartModFailed = true
     endif
 endEvent
 
@@ -80,48 +87,13 @@ event OnCreateShop(int result)
         Debug.Notification("Initialized Bazaar Realm client")
     else
         Debug.MessageBox("Failed to initialize Bazaar Realm client. Please submit a bug on Nexus Mods with the contents of BazaarRealmPlugin.log and BazaarRealmClient.log usually located in C:\\Users\\<your user>\\Documents\\My Games\\Skyrim Special Edition\\SKSE.")
+        StartModFailed = true
     endif
 endEvent
 
 bool function SaveInteriorRefs()
     ; TODO: this should not save anything if player is not currently in their shop
     bool result = BRInteriorRefList.Create(ApiUrl, ApiKey, ShopId, self)
-    ; Int numRefs = currentCell.GetNumRefs()
-    ; debug.Trace("Num of refs in current cell: " + numRefs)
-    ; Int refIndex = 0
-    ; while refIndex <= numRefs
-    ;     ObjectReference ref = currentCell.GetNthRef(refIndex)
-    ;     ; if ref != None && ref.IsEnabled()
-    ;     ;     Form a_form = ref.GetBaseObject()
-    ;     ;     debug.Trace("Ref " + refIndex + ": " + ref.GetDisplayName())
-    ;     ;     debug.Trace("Ref position: " + ref.X + ", " + ref.Y + ", " + ref.Z)
-    ;     ;     debug.Trace("Ref angle: " + ref.getAngleX() + ", " + ref.getAngleY() + ", " + ref.getAngleZ())
-    ;     ;     debug.Trace("Ref scale: " + ref.GetScale())
-    ;     ;     debug.Trace("Ref Base Object Name: " + a_form.GetName() + " (" + a_form.GetType() + ")")
-    ;     ;     Int formId = a_form.GetFormID()
-    ;     ;     if (formId < 0)
-    ;     ;         ; GetFormId is broken for light mods, so we have to fix this ourselves
-    ;     ;         formId = formId + 2147483647 ; formId + INT_MAX
-    ;     ;         debug.Trace("Ref (light) form id: " + formId)
-    ;     ;         Int localFormId = Math.LogicalAnd(formId, 4095) + 1 ; (formId & 0xfff) + 1
-    ;     ;         debug.Trace("Ref (light) local form id: " + localFormId)
-    ;     ;         Int modIndex = Math.LogicalAnd(Math.RightShift(formId, 12), 4095) ; (formId >> 12) & 0xfff
-    ;     ;         debug.Trace("Light mod index: " + modIndex)
-    ;     ;         String modName = Game.GetLightModName(modIndex)
-    ;     ;         debug.Trace("Light mod name: " + modName)
-    ;     ;     else
-    ;     ;         debug.Trace("Ref form id: " + formId)
-    ;     ;         Int localFormId = Math.LogicalAnd(formId, 16777215); formId & 0xffffff
-    ;     ;         debug.Trace("Ref local form id: " + localFormId)
-    ;     ;         Int modIndex = Math.RightShift(formId, 24)
-    ;     ;         debug.Trace("Mod index: " + modIndex)
-    ;     ;         String modName = Game.GetModName(modIndex)
-    ;     ;         debug.Trace("Mod name: " + modName)
-    ;     ;     endIf
-    ;     ; endIf
-    ;     debug.Trace("Ref " + refIndex)
-    ;     refIndex += 1
-    ; endWhile
     if result
         return true
     else
@@ -147,6 +119,7 @@ bool function LoadInteriorRefs()
         Debug.MessageBox("Failed to load shop. Please submit a bug on Nexus Mods with the contents of BazaarRealmPlugin.log and BazaarRealmClient.log usually located in C:\\Users\\<your user>\\Documents\\My Games\\Skyrim Special Edition\\SKSE.")
     endif
     Debug.Trace("ClearCell result: " + result)
+
     result = BRInteriorRefList.Load(ApiUrl, ApiKey, InteriorRefListId, ShopXMarker, self)
     if result
         return true
