@@ -22,20 +22,31 @@ event OnPageReset(string page)
     if modStarted
         AddTextOptionST("API_KEY", "Reveal API key", "")
     endif
-    SetCursorPosition(7)
 
+    SetCursorPosition(5)
     if modStarted
         AddToggleOptionST("START_MOD", "Mod Started", modStarted, OPTION_FLAG_DISABLED)
     else
         AddToggleOptionST("START_MOD", "Start Mod", modStarted)
     endif
 
-    AddHeaderOption("Shop Actions")
-    SetCursorPosition(10)
-    AddTextOptionST("SAVE_REFS", "Save current shop state", "")
-    AddTextOptionST("LOAD_REFS", "Load saved shop state", "")
-    AddTextOptionST("LIST_MERCH", "Show shop merchandise", "")
-    AddTextOptionST("LOAD_MERCH", "Load shop merchandise", "")
+
+    SetCursorPosition(8)
+    if modStarted
+        AddHeaderOption("Shop Config")
+        SetCursorPosition(10)
+        AddTextOptionST("SHOP_NAME_LABEL", "Shop name: ", "", OPTION_FLAG_DISABLED)
+        AddInputOptionST("SHOP_NAME", "", BR.ShopName)
+        AddTextOptionST("SHOP_DESC_LABEL", "Shop description: ", "", OPTION_FLAG_DISABLED)
+        AddInputOptionST("SHOP_DESC", "", BR.ShopDescription)
+        AddTextOptionST("LOAD_SHOP_CONFIG", "Load shop config from server", "")
+
+        SetCursorPosition(18)
+        AddHeaderOption("Shop Actions")
+        SetCursorPosition(20)
+        AddTextOptionST("SAVE_REFS", "Save current shop state", "")
+        AddTextOptionST("LOAD_REFS", "Load saved shop state", "")
+    endif
 endEvent
 
 state SERVER_URL_VALUE
@@ -119,22 +130,114 @@ state LOAD_REFS
     endEvent
 endState
 
-state LIST_MERCH
-    event OnSelectST()
-        BR.ListMerchandise()
+state SHOP_NAME
+    event OnInputOpenST()
+        SetInputDialogStartText(BR.ShopName)
+    endEvent
+
+    event OnInputAcceptST(string textInput)
+        Debug.Trace("BRMCMConfigMenu BRQuest properties: ShopId: " + BR.ShopId + " ShopName: " + BR.ShopName + " ShopDescription: " + BR.ShopDescription)
+        SetInputOptionValueST("Updating...")
+        BR.UpdateShop(BR.ShopId, textInput, BR.ShopDescription)
+
+        int attempts = 0
+        while !BR.UpdateShopComplete && attempts < 100
+            attempts += 1
+            Utility.WaitMenuMode(0.1)
+        endWhile
+
+        if attempts >= 100
+            Debug.Trace("BRMCMConfigMenu BR.UpdateShop failed. BR.UpdateShopComplete still unset after 100 polls (10 seconds)")
+        endif
+
+        SetInputOptionValueST(BR.ShopName)
     endEvent
 
     event OnHighlightST()
-        SetInfoText("Open a list of every item currently up for sale in your shop's merchandise inventory.")
+        SetInfoText("The name of your shop. This is displayed to other players in the shop menu.")
+    endEvent
+
+    event OnDefaultST()
+        SetInputOptionValueST("Updating...")
+        BR.UpdateShop(BR.ShopId, Game.GetPlayer().GetBaseObject().GetName() + "'s Shop", BR.ShopDescription)
+
+        int attempts = 0
+        while !BR.UpdateShopComplete && attempts < 100
+            attempts += 1
+            Utility.WaitMenuMode(0.1)
+        endWhile
+
+        if attempts >= 100
+            Debug.Trace("BRMCMConfigMenu BR.UpdateShop failed. BR.UpdateShopComplete still unset after 100 polls (10 seconds)")
+        endif
+
+        SetInputOptionValueST(BR.ShopName)
     endEvent
 endState
 
-state LOAD_MERCH
-    event OnSelectST()
-        BR.LoadMerchandise()
+state SHOP_DESC
+    event OnInputOpenST()
+        SetInputDialogStartText(BR.ShopDescription)
+    endEvent
+
+    event OnInputAcceptST(string textInput)
+        SetInputOptionValueST("Updating...")
+        BR.UpdateShop(BR.ShopId, BR.ShopName, textInput)
+
+        int attempts = 0
+        while !BR.UpdateShopComplete && attempts < 100
+            attempts += 1
+            Utility.WaitMenuMode(0.1)
+        endWhile
+
+        if attempts >= 100
+            Debug.Trace("BRMCMConfigMenu BR.UpdateShop failed. BR.UpdateShopComplete still unset after 100 polls (10 seconds)")
+        endif
+
+        SetInputOptionValueST(BR.ShopDescription)
     endEvent
 
     event OnHighlightST()
-        SetInfoText("Load shop merchandise onto the merchant shelf of the shop.")
+        SetInfoText("The description of your shop. This is displayed to other players in the shop menu. This is a useful place to advertise what your shop sells.")
+    endEvent
+
+    event OnDefaultST()
+        SetInputOptionValueST("Updating...")
+        BR.UpdateShop(BR.ShopId, BR.ShopName, "")
+
+        int attempts = 0
+        while !BR.UpdateShopComplete && attempts < 100
+            attempts += 1
+            Utility.WaitMenuMode(0.1)
+        endWhile
+
+        if attempts >= 100
+            Debug.Trace("BRMCMConfigMenu BR.UpdateShop failed. BR.UpdateShopComplete still unset after 100 polls (10 seconds)")
+        endif
+
+        SetInputOptionValueST(BR.ShopDescription)
+    endEvent
+endState
+
+state LOAD_SHOP_CONFIG
+    event OnSelectST()
+        SetTextOptionValueST("Fetching...")
+        BR.GetShop(BR.ShopId)
+
+        int attempts = 0
+        while !BR.GetShopComplete && attempts < 100
+            attempts += 1
+            Utility.WaitMenuMode(0.1)
+        endWhile
+
+        if attempts >= 100
+            Debug.Trace("BRMCMConfigMenu BR.GetShop failed. BR.GetShopComplete still unset after 100 polls (10 seconds)")
+        endif
+
+        ForcePageReset()
+    endEvent
+
+    event OnHighlightST()
+        SetInfoText("Overwrites the shop name and description with values saved on the server. Run this after updating any of your shop config values on the website.")
     endEvent
 endState
