@@ -10,13 +10,14 @@ int property ShopId auto
 string property ShopName auto
 string property ShopDescription auto
 ; TODO: loop up interior refs by shop id instead of saving this
-int property InteriorRefListId = 29 auto ; TODO: temp fixing to id 20
-int property MerchandiseListId = 2 auto ; TODO: temp fixing to id 2
+int property InteriorRefListId auto ; TODO: temp fixing to id 20
+int property MerchandiseListId auto ; TODO: temp fixing to id 2
 ObjectReference property ShopXMarker auto
 bool property StartModFailed = false auto
 bool property UpdateShopComplete = false auto
 bool property GetShopComplete = false auto
 UILIB_1 property UILib auto
+string property BugReportCopy = "Please submit a bug on Nexus Mods with the contents of BazaarRealmPlugin.log and BazaarRealmClient.log usually located in C:\\Users\\<your user>\\Documents\\My Games\\Skyrim Special Edition\\SKSE." auto
 
 int function GetVersion()
     return 1
@@ -31,7 +32,7 @@ function Maintenance()
     Debug.Trace("BRQuestScript Maintenance")
     UILib = (Self as Form) as UILIB_1
     if !BRClient.Init()
-        Debug.MessageBox("Failed to initialize Bazaar Realm client. Please ensure that the folder Documents\\My Games\\Skyrim Special Edition\\SKSE exists and is accessible by Skyrim.")
+        Debug.MessageBox("Failed to initialize Bazaar Realm client.\n\nPlease ensure that the folder Documents\\My Games\\Skyrim Special Edition\\SKSE exists and is accessible by Skyrim.")
     endif
     int newVersion = GetVersion()
     if ModVersion < newVersion
@@ -46,14 +47,14 @@ bool function StartMod()
     StartModFailed = false
     bool result = BRClient.StatusCheck(ApiUrl, self)
     if !result
-        Debug.MessageBox("Failed to initialize Bazaar Realm client. The API server might be down: " + ApiUrl)
+        Debug.MessageBox("Failed to initialize Bazaar Realm client.\n\nThe API server might be down: " + ApiUrl)
         StartModFailed = true
     endif
     return result
 endFunction
 
-event OnStatusCheck(bool result)
-    Debug.Trace("BRQuestScript OnStatusCheck result: " + result)
+event OnStatusCheckSuccess(bool result)
+    Debug.Trace("BRQuestScript OnStatusCheckSuccess result: " + result)
     if result
         ApiKey = BRClient.GenerateApiKey()
         Debug.Trace("apiKey: " + ApiKey)
@@ -61,29 +62,33 @@ event OnStatusCheck(bool result)
         string playerName = PlayerRef.GetBaseObject().GetName()
         bool ownerResult = BROwner.Create(ApiUrl, ApiKey, playerName, ModVersion, self)
         if !ownerResult
-            Debug.MessageBox("Failed to initialize Bazaar Realm client. Please submit a bug on Nexus Mods with the contents of BazaarRealmPlugin.log and BazaarRealmClient.log usually located in C:\\Users\\<your user>\\Documents\\My Games\\Skyrim Special Edition\\SKSE.")
+            Debug.MessageBox("Failed to create new owner in the API.\n\n" + BugReportCopy)
             StartModFailed = true
         endif
-    else
-        Debug.MessageBox("Failed to initialize Bazaar Realm client. The API server might be down: " + ApiUrl)
+    endif
+endEvent
+
+event OnStatusCheckFail(string error)
+    Debug.Trace("BRQuestScript OnStatusCheckFail error: " + error)
+    Debug.MessageBox("Failed to initialize Bazaar Realm client.\n\n" + error + "\n\nThe API server might be down: " + ApiUrl)
+    StartModFailed = true
+endEvent
+
+event OnCreateOwnerSuccess(int id)
+    Debug.Trace("BRQuestScript OnCreateOwnerSuccess id: " + id)
+    string playerName = PlayerRef.GetBaseObject().GetName()
+    OwnerId = id
+    bool shopResult = BRShop.Create(ApiUrl, ApiKey, playerName + "'s Shop", "", self)
+    if !shopResult
+        Debug.MessageBox("Failed to create new shop in the API.\n\n" + BugReportCopy)
         StartModFailed = true
     endif
 endEvent
 
-event OnCreateOwner(int result)
-    Debug.Trace("BRQuestScript OnCreateOwner result: " + result)
-    string playerName = PlayerRef.GetBaseObject().GetName()
-    if result > -1
-        OwnerId = result
-        bool shopResult = BRShop.Create(ApiUrl, ApiKey, playerName + "'s Shop", "", self)
-        if !shopResult
-            Debug.MessageBox("Failed to initialize Bazaar Realm client. Please submit a bug on Nexus Mods with the contents of BazaarRealmPlugin.log and BazaarRealmClient.log usually located in C:\\Users\\<your user>\\Documents\\My Games\\Skyrim Special Edition\\SKSE.")
-            StartModFailed = true
-        endif
-    else
-        Debug.MessageBox("Failed to initialize Bazaar Realm client. Please submit a bug on Nexus Mods with the contents of BazaarRealmPlugin.log and BazaarRealmClient.log usually located in C:\\Users\\<your user>\\Documents\\My Games\\Skyrim Special Edition\\SKSE.")
-        StartModFailed = true
-    endif
+event OnCreateOwnerFail(string error)
+    Debug.Trace("BRQuestScript OnCreateOwnerFail error: " + error)
+    Debug.MessageBox("Failed to create new owner in the API.\n\n" + error + "\n\n" + BugReportCopy)
+    StartModFailed = true
 endEvent
 
 event OnCreateShopSuccess(int id, string name, string description)
@@ -96,7 +101,7 @@ endEvent
 
 event OnCreateShopFail(string error)
     Debug.Trace("BRQuestScript OnCreateShopFail error: " + error)
-    Debug.MessageBox("Failed to initialize Bazaar Realm client.\n\n" + error + "\n\nPlease submit a bug on Nexus Mods with the contents of BazaarRealmPlugin.log and BazaarRealmClient.log usually located in C:\\Users\\<your user>\\Documents\\My Games\\Skyrim Special Edition\\SKSE.")
+    Debug.MessageBox("Failed to initialize Bazaar Realm client.\n\n" + error + "\n\n" + BugReportCopy)
     StartModFailed = true
 endEvent
 
@@ -106,26 +111,27 @@ bool function SaveInteriorRefs()
     if result
         return true
     else
-        Debug.MessageBox("Failed to save shop. Please submit a bug on Nexus Mods with the contents of BazaarRealmPlugin.log and BazaarRealmClient.log usually located in C:\\Users\\<your user>\\Documents\\My Games\\Skyrim Special Edition\\SKSE.")
+        Debug.MessageBox("Failed to save shop.\n\n" + BugReportCopy)
         return false
     endif
 endFunction
 
-event OnCreateInteriorRefList(int result)
-    Debug.Trace("BRQuestSCript OnCreateInteriorRefList result: " + result)
-    if result > -1
-        InteriorRefListId = result
-        Debug.MessageBox("Successfully saved shop.")
-    else
-        Debug.MessageBox("Failed to save shop. Please submit a bug on Nexus Mods with the contents of BazaarRealmPlugin.log and BazaarRealmClient.log usually located in C:\\Users\\<your user>\\Documents\\My Games\\Skyrim Special Edition\\SKSE.")
-    endif
+event OnCreateInteriorRefListSuccess(int id)
+    Debug.Trace("BRQuestSCript OnCreateInteriorRefListSuccess id: " + id)
+    InteriorRefListId = id
+    Debug.MessageBox("Successfully saved shop.")
+endEvent
+
+event OnCreateInteriorRefListFail(string error)
+    Debug.Trace("BRQuestSCript OnCreateInteriorRefListFail error: " + error)
+    Debug.MessageBox("Failed to save shop.\n\n" + error + "\n\n" + BugReportCopy)
 endEvent
 
 bool function LoadInteriorRefs()
-    ; TODO: this should not save anything if player is not currently in their shop
+    ; TODO: this should not load anything if player is not currently in their shop
     bool result = BRInteriorRefList.ClearCell()
     if !result
-        Debug.MessageBox("Failed to load shop. Please submit a bug on Nexus Mods with the contents of BazaarRealmPlugin.log and BazaarRealmClient.log usually located in C:\\Users\\<your user>\\Documents\\My Games\\Skyrim Special Edition\\SKSE.")
+        Debug.MessageBox("Failed to clear existing shop before loading in new shop.\n\n" + BugReportCopy)
     endif
     Debug.Trace("ClearCell result: " + result)
 
@@ -133,20 +139,22 @@ bool function LoadInteriorRefs()
     if result
         return true
     else
-        Debug.MessageBox("Failed to load shop. Please submit a bug on Nexus Mods with the contents of BazaarRealmPlugin.log and BazaarRealmClient.log usually located in C:\\Users\\<your user>\\Documents\\My Games\\Skyrim Special Edition\\SKSE.")
+        Debug.MessageBox("Failed to load shop.\n\n" + BugReportCopy)
         return false
     endif
 endFunction
 
-event OnLoadInteriorRefList(bool result)
-    Debug.Trace("BRQuestSCript OnLoadInteriorRefList result: " + result)
-    if result
-        Debug.MessageBox("Successfully loaded shop")
-    else
-        Debug.MessageBox("Failed to load shop. Please submit a bug on Nexus Mods with the contents of BazaarRealmPlugin.log and BazaarRealmClient.log usually located in C:\\Users\\<your user>\\Documents\\My Games\\Skyrim Special Edition\\SKSE.")
-    endif
+event OnLoadInteriorRefListSuccess(bool result)
+    Debug.Trace("BRQuestSCript OnLoadInteriorRefListSuccess result: " + result)
+    Debug.MessageBox("Successfully loaded shop")
 endEvent
 
+event OnLoadInteriorRefListFail(string error)
+    Debug.Trace("BRQuestSCript OnLoadInteriorRefListFail error: " + error)
+    Debug.MessageBox("Failed to load shop.\n\n" + error + "\n\n" + BugReportCopy)
+endEvent
+
+; currently unused, was testing out UILib
 int function ListMerchandise()
     string[] options = new string[5]
     options[0] = "First Item"
@@ -164,7 +172,7 @@ function UpdateShop(int id, string name, string description)
     UpdateShopComplete = false
     bool result = BRShop.Update(ApiUrl, ApiKey, id, name, description, self)
     if !result
-        Debug.MessageBox("Failed to update shop. Please submit a bug on Nexus Mods with the contents of BazaarRealmPlugin.log and BazaarRealmClient.log usually located in C:\\Users\\<your user>\\Documents\\My Games\\Skyrim Special Edition\\SKSE.")
+        Debug.MessageBox("Failed to update shop.\n\n" + BugReportCopy)
         UpdateShopComplete = true
     endif
 endFunction
@@ -179,7 +187,7 @@ endEvent
 
 event OnUpdateShopFail(string error)
     Debug.Trace("BRQuestScript OnUpdateShopFail error: " + error)
-    Debug.MessageBox("Failed to update shop.\n\n" + error + "\n\nPlease submit a bug on Nexus Mods with the contents of BazaarRealmPlugin.log and BazaarRealmClient.log usually located in C:\\Users\\<your user>\\Documents\\My Games\\Skyrim Special Edition\\SKSE.")
+    Debug.MessageBox("Failed to update shop.\n\n" + error + "\n\n" + BugReportCopy)
     UpdateShopComplete = true
 endEvent
 
@@ -188,7 +196,7 @@ function GetShop(int id)
     GetShopComplete = false
     bool result = BRShop.Get(ApiUrl, ApiKey, id, self)
     if !result
-        Debug.MessageBox("Failed to get shop. Please submit a bug on Nexus Mods with the contents of BazaarRealmPlugin.log and BazaarRealmClient.log usually located in C:\\Users\\<your user>\\Documents\\My Games\\Skyrim Special Edition\\SKSE.")
+        Debug.MessageBox("Failed to get shop.\n\n" + BugReportCopy)
         GetShopComplete = true
     endif
 endFunction
@@ -203,6 +211,6 @@ endEvent
 
 event OnGetShopFail(string error)
     Debug.Trace("BRQuestScript OnGetShopFail error: " + error)
-    Debug.MessageBox("Failed to get shop.\n\n" + error + "\n\nPlease submit a bug on Nexus Mods with the contents of BazaarRealmPlugin.log and BazaarRealmClient.log usually located in C:\\Users\\<your user>\\Documents\\My Games\\Skyrim Special Edition\\SKSE.")
+    Debug.MessageBox("Failed to get shop.\n\n" + error + "\n\n" + BugReportCopy)
     GetShopComplete = true
 endEvent

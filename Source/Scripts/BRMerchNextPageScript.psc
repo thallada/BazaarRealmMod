@@ -17,7 +17,7 @@ event OnActivate(ObjectReference akActionRef)
         bool result = BRMerchandiseList.NextPage(BRScript.ApiUrl, BRScript.ApiKey, BRScript.MerchandiseListId, MerchantShelf, PlaceholderStatic, BRLinkMerchShelf, BRLinkMerchChest, BRLinkItemRef, BRLinkMerchToggle, BRLinkMerchNext, BRLinkMerchPrev)
         Debug.Trace("BRMerchandiseList.NextPage result: " + result)
         if !result
-            Debug.MessageBox("Failed to load shop merchandise. Please submit a bug on Nexus Mods with the contents of BazaarRealmPlugin.log and BazaarRealmClient.log usually located in C:\\Users\\<your user>\\Documents\\My Games\\Skyrim Special Edition\\SKSE.")
+            Debug.MessageBox("Failed to load or clear shop merchandise.\n\n" + BRScript.BugReportCopy)
         endif
     endif
 endEvent

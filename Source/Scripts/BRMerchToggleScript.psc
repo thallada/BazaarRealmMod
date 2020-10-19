@@ -17,20 +17,22 @@ event OnActivate(ObjectReference akActionRef)
         bool result = BRMerchandiseList.Toggle(BRScript.ApiUrl, BRScript.ApiKey, BRScript.MerchandiseListId, MerchantShelf, PlaceholderStatic, BRLinkMerchShelf, BRLinkMerchChest, BRLinkItemRef, BRLinkMerchToggle, BRLinkMerchNext, BRLinkMerchPrev)
         Debug.Trace("BRMerchandiseList.Toggle result: " + result)
         if !result
-            Debug.MessageBox("Failed to load or clear shop merchandise. Please submit a bug on Nexus Mods with the contents of BazaarRealmPlugin.log and BazaarRealmClient.log usually located in C:\\Users\\<your user>\\Documents\\My Games\\Skyrim Special Edition\\SKSE.")
+            Debug.MessageBox("Failed to load or clear shop merchandise.\n\n" + BRScript.BugReportCopy)
         endif
     endif
 endEvent
 
-event OnLoadMerchandise(bool result)
-    Debug.Trace("BRMerchToggleScript OnLoadMerchandise result: " + result)
-    if result
-        ObjectReference MerchantShelf = self.GetLinkedRef(BRLinkMerchShelf)
-        while !BRMerchandiseList.Replace3D(MerchantShelf, PlaceholderStatic, BRLinkMerchShelf, BRLinkItemRef)
-            Debug.Trace("BRMerchandiseList.Replace3D returned false, waiting and trying again")
-            Utility.Wait(0.05)
-        endWhile
-    else
-        Debug.MessageBox("Failed to load or clear shop merchandise. Please submit a bug on Nexus Mods with the contents of BazaarRealmPlugin.log and BazaarRealmClient.log usually located in C:\\Users\\<your user>\\Documents\\My Games\\Skyrim Special Edition\\SKSE.")
-    endif
+event OnLoadMerchandiseSuccess(bool result)
+    Debug.Trace("BRMerchToggleScript OnLoadMerchandiseSuccess result: " + result)
+    ObjectReference MerchantShelf = self.GetLinkedRef(BRLinkMerchShelf)
+    while !BRMerchandiseList.Replace3D(MerchantShelf, PlaceholderStatic, BRLinkMerchShelf, BRLinkItemRef)
+        Debug.Trace("BRMerchandiseList.Replace3D returned false, waiting and trying again")
+        Utility.Wait(0.05)
+    endWhile
+endEvent
+
+event OnLoadMerchandiseFail(string error)
+    Debug.Trace("BRMerchToggleScript OnLoadMerchandiseFail error: " + error)
+    BRQuestScript BRScript = BRQuest as BRQuestScript
+    Debug.MessageBox("Failed to load or clear shop merchandise.\n\n" + error + "\n\n" + BRScript.BugReportCopy)
 endEvent

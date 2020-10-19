@@ -9,7 +9,7 @@ event OnMenuClose(string menuName)
         BRQuestScript BRScript = BRQuest as BRQuestScript
         bool result = BRMerchandiseList.Create(BRScript.ApiUrl, BRScript.ApiKey, BRScript.ShopId, self)
         if !result
-            Debug.MessageBox("Failed to save shop merchandise. Please submit a bug on Nexus Mods with the contents of BazaarRealmPlugin.log and BazaarRealmClient.log usually located in C:\\Users\\<your user>\\Documents\\My Games\\Skyrim Special Edition\\SKSE.")
+            Debug.MessageBox("Failed to save shop merchandise.\n\n" + BRScript.BugReportCopy)
         endif
         UnregisterForMenu("ContainerMenu")
     endif
@@ -22,15 +22,19 @@ event OnActivate(ObjectReference akActionRef)
     endif
 endEvent
 
-event OnCreateMerchandise(int result)
-    Debug.Trace("BRMerchChestScript OnCreateMerchandise result: " + result)
-    if result == -2
-        Debug.Trace("BRMerchChestScript no container changes to save to the server")
-    elseif result == -1
-        Debug.MessageBox("Failed to save shop merchandise. Please submit a bug on Nexus Mods with the contents of BazaarRealmPlugin.log and BazaarRealmClient.log usually located in C:\\Users\\<your user>\\Documents\\My Games\\Skyrim Special Edition\\SKSE.")
-    else
+event OnCreateMerchandiseSuccess(bool created, int id)
+    Debug.Trace("BRMerchChestScript OnCreateMerchandiseSuccess created: " + created + " id: " + id)
+    if created
         BRQuestScript BRScript = BRQuest as BRQuestScript
-        BRScript.MerchandiseListId = result;
+        BRScript.MerchandiseListId = id;
         Debug.Notification("Saved merchandise successfully")
+    else
+        Debug.Trace("BRMerchChestScript no container changes to save to the server")
     endif
+endEvent
+
+event OnCreateMerchandiseFail(string error)
+    Debug.Trace("BRMerchChestScript OnCreateMerchandiseFail error: " + error)
+    BRQuestScript BRScript = BRQuest as BRQuestScript
+    Debug.MessageBox("Failed to save shop merchandise.\n\n" + error + "\n\n" + BRScript.BugReportCopy)
 endEvent
