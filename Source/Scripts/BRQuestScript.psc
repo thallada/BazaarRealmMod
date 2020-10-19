@@ -16,6 +16,7 @@ ObjectReference property ShopXMarker auto
 bool property StartModFailed = false auto
 bool property UpdateShopComplete = false auto
 bool property GetShopComplete = false auto
+bool property ListShopsComplete = false auto
 UILIB_1 property UILib auto
 string property BugReportCopy = "Please submit a bug on Nexus Mods with the contents of BazaarRealmPlugin.log and BazaarRealmClient.log usually located in C:\\Users\\<your user>\\Documents\\My Games\\Skyrim Special Edition\\SKSE." auto
 
@@ -213,4 +214,29 @@ event OnGetShopFail(string error)
     Debug.Trace("BRQuestScript OnGetShopFail error: " + error)
     Debug.MessageBox("Failed to get shop.\n\n" + error + "\n\n" + BugReportCopy)
     GetShopComplete = true
+endEvent
+
+function ListShops()
+    Debug.Trace("BRQuestScript ListShops")
+    ListShopsComplete = false
+    bool result = BRShop.List(ApiUrl, ApiKey, self)
+    if !result
+        Debug.MessageBox("Failed to list shops.\n\n" + BugReportCopy)
+        ListShopsComplete = true
+    endif
+endFunction
+
+event OnListShopsSuccess(int[] ids, string[] names, string[] descriptions)
+    Debug.Trace("BRQuestScript OnListShopsSuccess ids.length: " + ids.Length + " names.length: " + names.Length + " descriptions.length: " + descriptions.Length)
+    int index = 0
+    int selectedIndex = UILib.ShowList("Shop Merchandise", names, 0, 0)
+    Debug.MessageBox(names[selectedIndex] + " (ID: " + ids[selectedIndex] + ")\n\n" + descriptions[selectedIndex])
+    UILib.ShowNotification("Chose " + names[selectedIndex] + ". Id: " + ids[selectedIndex], "#74C56D")
+    ListShopsComplete = true
+endEvent
+
+event OnListShopsFail(string error)
+    Debug.Trace("BRQuestScript OnListShopsFail error: " + error)
+    Debug.MessageBox("Failed to list shops.\n\n" + error + "\n\n" + BugReportCopy)
+    ListShopsComplete = true
 endEvent

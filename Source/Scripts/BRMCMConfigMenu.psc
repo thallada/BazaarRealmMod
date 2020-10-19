@@ -46,6 +46,7 @@ event OnPageReset(string page)
         SetCursorPosition(20)
         AddTextOptionST("SAVE_REFS", "Save current shop state", "")
         AddTextOptionST("LOAD_REFS", "Load saved shop state", "")
+        AddTextOptionST("LIST_SHOPS", "List shops", "")
     endif
 endEvent
 
@@ -239,5 +240,28 @@ state LOAD_SHOP_CONFIG
 
     event OnHighlightST()
         SetInfoText("Overwrites the shop name and description with values saved on the server. Run this after updating any of your shop config values on the website.")
+    endEvent
+endState
+
+state LIST_SHOPS
+    event OnSelectST()
+        SetTextOptionValueST("Fetching...")
+        BR.ListShops()
+
+        int attempts = 0
+        while !BR.ListShopsComplete && attempts < 100
+            attempts += 1
+            Utility.WaitMenuMode(0.1)
+        endWhile
+
+        if attempts >= 100
+            Debug.Trace("BRMCMConfigMenu BR.ListShops failed. BR.ListShopsComplete still unset after 100 polls (10 seconds)")
+        endif
+
+        ForcePageReset()
+    endEvent
+
+    event OnHighlightST()
+        SetInfoText("Displays a list of shops on the server.")
     endEvent
 endState
