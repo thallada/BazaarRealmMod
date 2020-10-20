@@ -1,18 +1,29 @@
 scriptname BRQuestScript extends Quest
 
+; Mod Data
 int property ModVersion = 1 auto
+; Client config
 string property ApiUrl = "https://api.bazaarrealm.com" auto
 string property ApiKey auto
-actor property PlayerRef auto
+; Owner data (for the shop the player owns)
 int property OwnerId auto
-; TODO: need to be able to create multiple shops
+; TODO: need to be able to create multiple shops (make these arrays?)
 int property ShopId auto
 string property ShopName auto
 string property ShopDescription auto
-; TODO: loop up interior refs by shop id instead of saving this
-int property InteriorRefListId auto ; TODO: temp fixing to id 20
-int property MerchandiseListId auto ; TODO: temp fixing to id 2
+; TODO: look up interior refs and merch by shop id instead of saving this?
+int property InteriorRefListId auto
+int property MerchandiseListId auto
+; Active shop data (for the currently loaded shop)
+int property ActiveOwnerId auto
+int property ActiveShopId auto
+string property ActiveShopName auto
+string property ActiveShopDescription auto
+; references
+actor property PlayerRef auto
 ObjectReference property ShopXMarker auto
+message property ShopDetailMessage auto
+; UI sync properties
 bool property StartModFailed = false auto
 bool property UpdateShopComplete = false auto
 bool property GetShopComplete = false auto
@@ -130,6 +141,9 @@ endEvent
 
 bool function LoadInteriorRefs()
     ; TODO: this should not load anything if player is not currently in their shop
+    ActiveShopId = ShopId
+    ActiveShopName = ShopName
+    ActiveShopDescription = ShopDescription
     bool result = BRInteriorRefList.ClearCell()
     if !result
         Debug.MessageBox("Failed to clear existing shop before loading in new shop.\n\n" + BugReportCopy)
@@ -230,9 +244,24 @@ event OnListShopsSuccess(int[] ids, string[] names, string[] descriptions)
     Debug.Trace("BRQuestScript OnListShopsSuccess ids.length: " + ids.Length + " names.length: " + names.Length + " descriptions.length: " + descriptions.Length)
     int index = 0
     int selectedIndex = UILib.ShowList("Shop Merchandise", names, 0, 0)
-    Debug.MessageBox(names[selectedIndex] + " (ID: " + ids[selectedIndex] + ")\n\n" + descriptions[selectedIndex])
-    UILib.ShowNotification("Chose " + names[selectedIndex] + ". Id: " + ids[selectedIndex], "#74C56D")
     ListShopsComplete = true
+    Debug.MessageBox(names[selectedIndex] + " (ID: " + ids[selectedIndex] + ")\n\n" + descriptions[selectedIndex])
+    ActiveShopId = ids[selectedIndex]
+    ActiveShopName = names[selectedIndex]
+    ActiveShopDescription = descriptions[selectedIndex]
+    ShopDetailMessage.SetName(names[selectedIndex])
+    if ShopDetailMessage.Show() == 0
+        bool result = BRInteriorRefList.ClearCell()
+        if !result
+            Debug.MessageBox("Failed to clear existing shop before loading in new shop.\n\n" + BugReportCopy)
+        endif
+        Debug.Trace("ClearCell result: " + result)
+
+        result = BRInteriorRefList.LoadByShopId(ApiUrl, ApiKey, ActiveShopId, ShopXMarker, self)
+        if !result
+            Debug.MessageBox("Failed to load shop.\n\n" + BugReportCopy)
+        endif
+    endif
 endEvent
 
 event OnListShopsFail(string error)
