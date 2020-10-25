@@ -83,6 +83,7 @@ endState
 state START_MOD
     event OnSelectST()
         if BR.StartMod()
+            SetOptionFlagsST(OPTION_FLAG_DISABLED)
             int attempts = 0
             while BR.ShopId == 0 && !BR.StartModFailed && attempts < 100
                 attempts += 1
@@ -123,7 +124,9 @@ endState
 
 state LOAD_REFS
     event OnSelectST()
+        SetTextOptionValueST("Loading...")
         BR.LoadInteriorRefs()
+        SetTextOptionValueST("")
     endEvent
 
     event OnHighlightST()

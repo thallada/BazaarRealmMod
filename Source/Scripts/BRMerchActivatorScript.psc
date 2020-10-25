@@ -1,4 +1,4 @@
-scriptname BRMerchPlaceholderScript extends ObjectReference
+scriptname BRMerchActivatorScript extends ObjectReference
 
 Actor Property PlayerRef Auto
 
