@@ -20,9 +20,13 @@ int property ActiveShopId auto
 string property ActiveShopName auto
 string property ActiveShopDescription auto
 ; references
-actor property PlayerRef auto
+Actor property PlayerRef auto
 ObjectReference property ShopXMarker auto
-message property ShopDetailMessage auto
+; messages
+Message property ShopDetailMessage auto
+Message property BuyMerchandiseMessage auto
+; message replacement refs
+ObjectReference property SelectedMerchandise auto
 ; UI sync properties
 bool property StartModFailed = false auto
 bool property UpdateShopComplete = false auto
