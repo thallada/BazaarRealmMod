@@ -249,12 +249,12 @@ event OnListShopsSuccess(int[] ids, string[] names, string[] descriptions)
     int index = 0
     int selectedIndex = UILib.ShowList("Shop Merchandise", names, 0, 0)
     ListShopsComplete = true
-    Debug.MessageBox(names[selectedIndex] + " (ID: " + ids[selectedIndex] + ")\n\n" + descriptions[selectedIndex])
-    ActiveShopId = ids[selectedIndex]
-    ActiveShopName = names[selectedIndex]
-    ActiveShopDescription = descriptions[selectedIndex]
-    ShopDetailMessage.SetName(names[selectedIndex])
     if ShopDetailMessage.Show() == 0
+        Debug.MessageBox(names[selectedIndex] + " (ID: " + ids[selectedIndex] + ")\n\n" + descriptions[selectedIndex])
+        ActiveShopId = ids[selectedIndex]
+        ActiveShopName = names[selectedIndex]
+        ActiveShopDescription = descriptions[selectedIndex]
+        ShopDetailMessage.SetName(names[selectedIndex])
         bool result = BRInteriorRefList.ClearCell()
         if !result
             Debug.MessageBox("Failed to clear existing shop before loading in new shop.\n\n" + BugReportCopy)
