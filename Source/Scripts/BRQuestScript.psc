@@ -133,21 +133,18 @@ bool function SaveInteriorRefs()
 endFunction
 
 event OnCreateInteriorRefListSuccess(int id)
-    Debug.Trace("BRQuestSCript OnCreateInteriorRefListSuccess id: " + id)
+    Debug.Trace("BRQuestScript OnCreateInteriorRefListSuccess id: " + id)
     InteriorRefListId = id
     Debug.MessageBox("Successfully saved shop.")
 endEvent
 
 event OnCreateInteriorRefListFail(string error)
-    Debug.Trace("BRQuestSCript OnCreateInteriorRefListFail error: " + error)
+    Debug.Trace("BRQuestScript OnCreateInteriorRefListFail error: " + error)
     Debug.MessageBox("Failed to save shop.\n\n" + error + "\n\n" + BugReportCopy)
 endEvent
 
 bool function LoadInteriorRefs()
     ; TODO: this should not load anything if player is not currently in their shop
-    ActiveShopId = ShopId
-    ActiveShopName = ShopName
-    ActiveShopDescription = ShopDescription
     bool result = BRInteriorRefList.ClearCell()
     if !result
         Debug.MessageBox("Failed to clear existing shop before loading in new shop.\n\n" + BugReportCopy)
@@ -164,12 +161,15 @@ bool function LoadInteriorRefs()
 endFunction
 
 event OnLoadInteriorRefListSuccess(bool result)
-    Debug.Trace("BRQuestSCript OnLoadInteriorRefListSuccess result: " + result)
+    Debug.Trace("BRQuestScript OnLoadInteriorRefListSuccess result: " + result)
+    ActiveShopId = ShopId
+    ActiveShopName = ShopName
+    ActiveShopDescription = ShopDescription
     Debug.MessageBox("Successfully loaded shop")
 endEvent
 
 event OnLoadInteriorRefListFail(string error)
-    Debug.Trace("BRQuestSCript OnLoadInteriorRefListFail error: " + error)
+    Debug.Trace("BRQuestScript OnLoadInteriorRefListFail error: " + error)
     Debug.MessageBox("Failed to load shop.\n\n" + error + "\n\n" + BugReportCopy)
 endEvent
 
