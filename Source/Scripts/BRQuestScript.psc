@@ -22,6 +22,8 @@ string property ActiveShopDescription auto
 ; references
 Actor property PlayerRef auto
 ObjectReference property ShopXMarker auto
+ObjectReference property PrivateChest auto
+ObjectReference property PublicChest auto
 ; messages
 Message property ShopDetailMessage auto
 Message property BuyMerchandiseMessage auto
@@ -151,7 +153,7 @@ bool function LoadInteriorRefs()
     endif
     Debug.Trace("ClearCell result: " + result)
 
-    result = BRInteriorRefList.Load(ApiUrl, ApiKey, InteriorRefListId, ShopXMarker, self)
+    result = BRInteriorRefList.Load(ApiUrl, ApiKey, InteriorRefListId, ShopXMarker, PrivateChest, PublicChest, self)
     if result
         return true
     else
@@ -261,7 +263,7 @@ event OnListShopsSuccess(int[] ids, string[] names, string[] descriptions)
         endif
         Debug.Trace("ClearCell result: " + result)
 
-        result = BRInteriorRefList.LoadByShopId(ApiUrl, ApiKey, ActiveShopId, ShopXMarker, self)
+        result = BRInteriorRefList.LoadByShopId(ApiUrl, ApiKey, ActiveShopId, ShopXMarker, PrivateChest, PublicChest, self)
         if !result
             Debug.MessageBox("Failed to load shop.\n\n" + BugReportCopy)
         endif
