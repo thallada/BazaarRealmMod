@@ -1,13 +1,6 @@
 scriptname BRPublicMerchChestScript extends ObjectReference
 
 Keyword property BRLinkMerchShelf auto
-Keyword property BRLinkMerchChest auto
-Keyword property BRLinkItemRef auto
-Keyword property BRLinkActivatorRef auto
-Keyword property BRLinkMerchToggle auto
-Keyword property BRLinkMerchNext auto
-Keyword property BRLinkMerchPrev auto
-Activator property ActivatorStatic auto
 Actor property PlayerRef auto
 Quest property BRQuest auto
 FormList property BREmptyFormList auto
@@ -67,9 +60,10 @@ event OnCreateMerchandiseSuccess(bool created, int id)
         Debug.Notification("Saved merchandise successfully")
 
         ObjectReference merchantShelf = self.GetLinkedRef(BRLinkMerchShelf)
-        if !BRMerchandiseList.Refresh(BRScript.ApiUrl, BRScript.ApiKey, BRScript.ActiveShopId, merchantShelf, ActivatorStatic, BRLinkMerchShelf, BRLinkMerchChest, BRLinkItemRef, BRLinkActivatorRef, BRLinkMerchToggle, BRLinkMerchNext, BRLinkMerchPrev)
-            Debug.MessageBox("Failed refresh merchandise.\n\n" + BRScript.BugReportCopy)
-        endif
+        debug.MessageBox("BRMerchandiseList.Refresh not implemented yet!")
+        ; if !BRMerchandiseList.Refresh(BRScript.ApiUrl, BRScript.ApiKey, BRScript.ActiveShopId, merchantShelf)
+        ;     Debug.MessageBox("Failed refresh merchandise.\n\n" + BRScript.BugReportCopy)
+        ; endif
     else
         Debug.Trace("BRPublicMerchChestScript no container changes to save to the server")
     endif

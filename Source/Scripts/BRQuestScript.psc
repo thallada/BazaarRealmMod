@@ -19,6 +19,7 @@ int property ActiveOwnerId auto
 int property ActiveShopId auto
 string property ActiveShopName auto
 string property ActiveShopDescription auto
+ObjectReference[] property ActiveShopShelves auto
 ; references
 Actor property PlayerRef auto
 ObjectReference property ShopXMarker auto
@@ -153,8 +154,7 @@ bool function LoadInteriorRefs()
     endif
     Debug.Trace("ClearCell result: " + result)
 
-    result = BRInteriorRefList.Load(ApiUrl, ApiKey, InteriorRefListId, ShopXMarker, PrivateChest, PublicChest, self)
-    if result
+    if BRInteriorRefList.Load(ApiUrl, ApiKey, InteriorRefListId, ShopXMarker, PrivateChest, PublicChest, self)
         return true
     else
         Debug.MessageBox("Failed to load shop.\n\n" + BugReportCopy)
@@ -162,12 +162,20 @@ bool function LoadInteriorRefs()
     endif
 endFunction
 
-event OnLoadInteriorRefListSuccess(bool result)
+event OnLoadInteriorRefListSuccess(bool result, ObjectReference[] shelves)
     Debug.Trace("BRQuestScript OnLoadInteriorRefListSuccess result: " + result)
     ActiveShopId = ShopId
     ActiveShopName = ShopName
     ActiveShopDescription = ShopDescription
+    ActiveShopShelves = shelves
+    Debug.Trace("BRQuestScript OnLoadInteriorRefListSuccess ActiveShopShelves: " + ActiveShopShelves)
     Debug.MessageBox("Successfully loaded shop")
+    ; TODO: the assumption that player is in shop cell may be incorrect
+    Cell shopCell = PlayerRef.GetParentCell()
+
+    if !BRMerchandiseList.Load(ApiUrl, ApiKey, ActiveShopId, shopCell, ActiveShopShelves, PrivateChest)
+        Debug.MessageBox("Failed to load shop merchandise.\n\n" + BugReportCopy)
+    endif
 endEvent
 
 event OnLoadInteriorRefListFail(string error)

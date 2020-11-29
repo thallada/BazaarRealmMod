@@ -103,9 +103,10 @@ endFunction
 function RefreshMerchandise()
     BRQuestScript BRScript = BRQuest as BRQuestScript
     ObjectReference merchantShelf = self.GetLinkedRef(BRLinkMerchShelf)
-    if !BRMerchandiseList.Refresh(BRScript.ApiUrl, BRScript.ApiKey, BRScript.ActiveShopId, merchantShelf, ActivatorStatic, BRLinkMerchShelf, BRLinkMerchChest, BRLinkItemRef, BRLinkActivatorRef, BRLinkMerchToggle, BRLinkMerchNext, BRLinkMerchPrev)
-        Debug.MessageBox("Failed refresh merchandise.\n\n" + BRScript.BugReportCopy)
-    endif
+    debug.MessageBox("RefreshMerchandise not implemented yet!")
+    ; if !BRMerchandiseList.Refresh(BRScript.ApiUrl, BRScript.ApiKey, BRScript.ActiveShopId, merchantShelf)
+    ;     Debug.MessageBox("Failed refresh merchandise.\n\n" + BRScript.BugReportCopy)
+    ; endif
 endFunction
 
 event OnCreateTransactionSuccess(int id, int quantity, int amount)
@@ -120,4 +121,23 @@ Event OnCreateTransactionFail(string error)
     BRQuestScript BRScript = BRQuest as BRQuestScript
     Debug.MessageBox("Failed to buy merchandise.\n\n" + error + "\n\n" + BRScript.BugReportCopy)
     RefreshMerchandise()
+endEvent
+
+event OnLoadMerchandiseSuccess(bool result)
+    Debug.Trace("BRMerchChestScript OnLoadMerchandiseSuccess result: " + result)
+    ObjectReference MerchantShelf = self.GetLinkedRef(BRLinkMerchShelf)
+    debug.MessageBox("Successfully loaded shop merchandise")
+
+    ; TODO: the assumption that player is in shop cell may be incorrect
+    Cell shopCell = PlayerRef.GetParentCell()
+    while !BRMerchandiseList.ReplaceAll3D(shopCell)
+        Debug.Trace("BRMerchandiseList.Replace3D returned false, waiting and trying again")
+        Utility.Wait(0.05)
+    endWhile
+endEvent
+
+event OnLoadMerchandiseFail(string error)
+    Debug.Trace("BRMerchChestScript OnLoadMerchandiseFail error: " + error)
+    BRQuestScript BRScript = BRQuest as BRQuestScript
+    Debug.MessageBox("Failed to load or clear shop merchandise.\n\n" + error + "\n\n" + BRScript.BugReportCopy)
 endEvent

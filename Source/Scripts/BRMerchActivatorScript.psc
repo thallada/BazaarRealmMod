@@ -1,13 +1,7 @@
 scriptname BRMerchActivatorScript extends ObjectReference
 
 Keyword property BRLinkMerchShelf auto
-Keyword property BRLinkMerchChest auto
 Keyword property BRLinkItemRef auto
-Keyword property BRLinkActivatorRef auto
-Keyword property BRLinkMerchToggle auto
-Keyword property BRLinkMerchNext auto
-Keyword property BRLinkMerchPrev auto
-Activator property ActivatorStatic auto
 Actor property PlayerRef auto
 Quest property BRQuest auto
 MiscObject property Gold001 auto
@@ -63,9 +57,10 @@ endEvent
 function RefreshMerchandise()
     BRQuestScript BRScript = BRQuest as BRQuestScript
     ObjectReference merchantShelf = self.GetLinkedRef(BRLinkMerchShelf)
-    if !BRMerchandiseList.Refresh(BRScript.ApiUrl, BRScript.ApiKey, BRScript.ActiveShopId, merchantShelf, ActivatorStatic, BRLinkMerchShelf, BRLinkMerchChest, BRLinkItemRef, BRLinkActivatorRef, BRLinkMerchToggle, BRLinkMerchNext, BRLinkMerchPrev)
-        Debug.MessageBox("Failed refresh merchandise.\n\n" + BRScript.BugReportCopy)
-    endif
+    debug.MessageBox("RefreshMerchandise not implemented yet!")
+    ; if !BRMerchandiseList.Refresh(BRScript.ApiUrl, BRScript.ApiKey, BRScript.ActiveShopId, merchantShelf)
+    ;     Debug.MessageBox("Failed refresh merchandise.\n\n" + BRScript.BugReportCopy)
+    ; endif
 endFunction
 
 event OnCreateTransactionSuccess(int id, int quantity, int amount)
