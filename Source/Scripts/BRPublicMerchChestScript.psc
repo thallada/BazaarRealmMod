@@ -15,7 +15,10 @@ event OnMenuClose(string menuName)
         Debug.Trace("BRPublicMerchChestScript container menu closed")
         BRQuestScript BRScript = BRQuest as BRQuestScript
         if BRScript.ActiveShopId == BRScript.ShopId
-            bool result = BRMerchandiseList.Create(BRScript.ApiUrl, BRScript.ApiKey, BRScript.ShopId, self)
+            ; TODO: the assumption that player is in shop cell may be incorrect
+            Cell shopCell = PlayerRef.GetParentCell()
+
+            bool result = BRMerchandiseList.Create(BRScript.ApiUrl, BRScript.ApiKey, BRScript.ShopId, shopCell, BRScript.ActiveShopShelves, self)
             if !result
                 Debug.MessageBox("Failed to save shop merchandise.\n\n" + BRScript.BugReportCopy)
             endif
@@ -52,18 +55,12 @@ Event OnItemAdded(Form baseItem, int itemCount, ObjectReference itemRef, ObjectR
     endif
 endEvent
 
-event OnCreateMerchandiseSuccess(bool created, int id)
-    Debug.Trace("BRPublicMerchChestScript OnCreateMerchandiseSuccess created: " + created + " id: " + id)
+event OnCreateMerchandiseSuccess(bool created)
+    Debug.Trace("BRPublicMerchChestScript OnCreateMerchandiseSuccess created: " + created)
     if created
         BRQuestScript BRScript = BRQuest as BRQuestScript
-        BRScript.MerchandiseListId = id;
         Debug.Notification("Saved merchandise successfully")
 
-        ObjectReference merchantShelf = self.GetLinkedRef(BRLinkMerchShelf)
-        debug.MessageBox("BRMerchandiseList.Refresh not implemented yet!")
-        ; if !BRMerchandiseList.Refresh(BRScript.ApiUrl, BRScript.ApiKey, BRScript.ActiveShopId, merchantShelf)
-        ;     Debug.MessageBox("Failed refresh merchandise.\n\n" + BRScript.BugReportCopy)
-        ; endif
     else
         Debug.Trace("BRPublicMerchChestScript no container changes to save to the server")
     endif

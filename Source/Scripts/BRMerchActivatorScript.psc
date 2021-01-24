@@ -53,28 +53,3 @@ event OnActivate(ObjectReference akActionRef)
         selectedMerchandiseRepl.SetName("Selected Merchandise")
     endif
 endEvent
-
-function RefreshMerchandise()
-    BRQuestScript BRScript = BRQuest as BRQuestScript
-    ObjectReference merchantShelf = self.GetLinkedRef(BRLinkMerchShelf)
-    debug.MessageBox("RefreshMerchandise not implemented yet!")
-    ; if !BRMerchandiseList.Refresh(BRScript.ApiUrl, BRScript.ApiKey, BRScript.ActiveShopId, merchantShelf)
-    ;     Debug.MessageBox("Failed refresh merchandise.\n\n" + BRScript.BugReportCopy)
-    ; endif
-endFunction
-
-event OnCreateTransactionSuccess(int id, int quantity, int amount)
-    debug.Trace("BRMerchActivatorScript OnCreateTransactionSuccess id: " + id + " quantity: " + quantity + " amount: " + amount)
-    ObjectReference merchRef = self.GetLinkedRef(BRLinkItemRef)
-    PlayerRef.RemoveItem(Gold001, amount)
-    PlayerRef.AddItem(merchRef.GetBaseObject(), quantity)
-    RefreshMerchandise()
-endEvent
-
-; TODO: gracefully handle expected error cases (e.g. someone else buys all of item before this player can buy them)
-Event OnCreateTransactionFail(string error)
-    Debug.Trace("BRMerchActivatorScript OnCreateTransactionFail error: " + error)
-    BRQuestScript BRScript = BRQuest as BRQuestScript
-    Debug.MessageBox("Failed to buy merchandise.\n\n" + error + "\n\n" + BRScript.BugReportCopy)
-    RefreshMerchandise()
-endEvent

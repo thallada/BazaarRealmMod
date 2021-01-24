@@ -13,7 +13,6 @@ string property ShopName auto
 string property ShopDescription auto
 ; TODO: look up interior refs and merch by shop id instead of saving this?
 int property InteriorRefListId auto
-int property MerchandiseListId auto
 ; Active shop data (for the currently loaded shop)
 int property ActiveOwnerId auto
 int property ActiveShopId auto
@@ -155,6 +154,9 @@ bool function LoadInteriorRefs()
     Debug.Trace("ClearCell result: " + result)
 
     if BRInteriorRefList.Load(ApiUrl, ApiKey, InteriorRefListId, ShopXMarker, PrivateChest, PublicChest, self)
+        ActiveShopId = ShopId
+        ActiveShopName = ShopName
+        ActiveShopDescription = ShopDescription
         return true
     else
         Debug.MessageBox("Failed to load shop.\n\n" + BugReportCopy)
@@ -164,9 +166,6 @@ endFunction
 
 event OnLoadInteriorRefListSuccess(bool result, ObjectReference[] shelves)
     Debug.Trace("BRQuestScript OnLoadInteriorRefListSuccess result: " + result)
-    ActiveShopId = ShopId
-    ActiveShopName = ShopName
-    ActiveShopDescription = ShopDescription
     ActiveShopShelves = shelves
     Debug.Trace("BRQuestScript OnLoadInteriorRefListSuccess ActiveShopShelves: " + ActiveShopShelves)
     Debug.MessageBox("Successfully loaded shop")

@@ -102,11 +102,12 @@ endFunction
 
 function RefreshMerchandise()
     BRQuestScript BRScript = BRQuest as BRQuestScript
-    ObjectReference merchantShelf = self.GetLinkedRef(BRLinkMerchShelf)
-    debug.MessageBox("RefreshMerchandise not implemented yet!")
-    ; if !BRMerchandiseList.Refresh(BRScript.ApiUrl, BRScript.ApiKey, BRScript.ActiveShopId, merchantShelf)
-    ;     Debug.MessageBox("Failed refresh merchandise.\n\n" + BRScript.BugReportCopy)
-    ; endif
+
+    ; TODO: the assumption that player is in shop cell may be incorrect
+    Cell shopCell = PlayerRef.GetParentCell()
+    if !BRMerchandiseList.Load(BRScript.ApiUrl, BRScript.ApiKey, BRScript.ActiveShopId, shopCell, BRScript.ActiveShopShelves, self)
+        Debug.MessageBox("Failed to load shop merchandise.\n\n" + BRScript.BugReportCopy)
+    endif
 endFunction
 
 event OnCreateTransactionSuccess(int id, int quantity, int amount)
@@ -125,7 +126,6 @@ endEvent
 
 event OnLoadMerchandiseSuccess(bool result)
     Debug.Trace("BRMerchChestScript OnLoadMerchandiseSuccess result: " + result)
-    ObjectReference MerchantShelf = self.GetLinkedRef(BRLinkMerchShelf)
     debug.MessageBox("Successfully loaded shop merchandise")
 
     ; TODO: the assumption that player is in shop cell may be incorrect
@@ -140,4 +140,21 @@ event OnLoadMerchandiseFail(string error)
     Debug.Trace("BRMerchChestScript OnLoadMerchandiseFail error: " + error)
     BRQuestScript BRScript = BRQuest as BRQuestScript
     Debug.MessageBox("Failed to load or clear shop merchandise.\n\n" + error + "\n\n" + BRScript.BugReportCopy)
+endEvent
+
+event OnLoadShelfPageSuccess(bool result)
+    Debug.Trace("BRMerchChestScript OnLoadShelfPageSuccess result: " + result)
+
+    ; TODO: the assumption that player is in shop cell may be incorrect
+    Cell shopCell = PlayerRef.GetParentCell()
+    while !BRMerchandiseList.ReplaceAll3D(shopCell) ; replace all 3D or only refs linked to this chest's shelf?
+        Debug.Trace("BRMerchandiseList.Replace3D returned false, waiting and trying again")
+        Utility.Wait(0.05)
+    endWhile
+endEvent
+
+event OnLoadShelfPageFail(string error)
+    Debug.Trace("BRMerchChestScript OnLoadShelfPageFail error: " + error)
+    BRQuestScript BRScript = BRQuest as BRQuestScript
+    Debug.MessageBox("Failed to load or clear page of shelf merchandise.\n\n" + error + "\n\n" + BRScript.BugReportCopy)
 endEvent
