@@ -87,9 +87,9 @@ function MaybeCreateTransaction()
     elseif soldAmount > 0 && soldItemBase && soldItemQuantity > 0
         debug.Trace("BRMerchChestScript MaybeCreateTransaction creating sell transaction")
         BRQuestScript BRScript = BRQuest as BRQuestScript
-        bool result = BRTransaction.CreateFromVendorSale(BRScript.ApiUrl, BRScript.ApiKey, BRScript.ActiveShopId, false, boughtItemQuantity, soldAmount, soldItemBase, self)
+        bool result = BRTransaction.CreateFromVendorSale(BRScript.ApiUrl, BRScript.ApiKey, BRScript.ActiveShopId, true, soldItemQuantity, soldAmount, soldItemBase, self)
         if !result
-            Debug.MessageBox("Failed to buy merchandise.\n\n" + BRScript.BugReportCopy)
+            Debug.MessageBox("Failed to sell merchandise.\n\n" + BRScript.BugReportCopy)
         endif
         soldAmount = 0
         soldItemBase = None

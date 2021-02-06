@@ -1,9 +1,12 @@
 scriptname BRPublicMerchChestScript extends ObjectReference
 
 Keyword property BRLinkMerchShelf auto
+Keyword property BRLinkMerchChest auto
 Actor property PlayerRef auto
 Quest property BRQuest auto
 FormList property BREmptyFormList auto
+Message property BRSellMerchandise auto
+MiscObject property Gold001 auto
 
 event OnInit()
     Debug.Trace("BRPublicMerchChestScript OnInit")
@@ -48,10 +51,27 @@ endEvent
 
 Event OnItemAdded(Form baseItem, int itemCount, ObjectReference itemRef, ObjectReference sourceContainer)
     if sourceContainer == PlayerRef
-        ; TODO: implement selling, for now it rejects all additions
-        debug.Notification("Trade rejected")
-        RemoveAllItems()
-        PlayerRef.AddItem(baseItem, 1)
+        BRQuestScript BRScript = BRQuest as BRQuestScript
+        Form selectedMerchandiseRepl = BRScript.SelectedMerchandise.GetBaseObject()
+        selectedMerchandiseRepl.SetName(baseItem.GetName())
+        ObjectReference shelf = self.GetLinkedRef(BRLinkMerchShelf)
+        ObjectReference privateChest = shelf.GetLinkedRef(BRLinkMerchChest)
+        int price = BRMerchandiseList.GetSellPrice(baseItem)
+        if BRSellMerchandise.Show(itemCount, price * itemCount, price) == 0
+            debug.Trace("BRPublicMerchChestScript creating sell transaction")
+            bool result = BRTransaction.CreateFromVendorSale(BRScript.ApiUrl, BRScript.ApiKey, BRScript.ActiveShopId, true, itemCount, price * itemCount, baseItem, privateChest)
+            if !result
+                Debug.MessageBox("Failed to sell merchandise.\n\n" + BRScript.BugReportCopy)
+            else
+                RemoveAllItems()
+                PlayerRef.AddItem(Gold001, price * itemCount)
+            endif
+        else
+            debug.Notification("Trade cancelled")
+            RemoveAllItems()
+            PlayerRef.AddItem(baseItem, itemCount)
+        endif
+        ; TODO: trade rejection
     endif
 endEvent
 

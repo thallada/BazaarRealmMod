@@ -14,3 +14,4 @@ bool function Create(string apiUrl, string apiKey, int shopId, Cell shopCell, Ob
 
 int function GetQuantity(ObjectReference activator) global native
 int function GetPrice(ObjectReference activator) global native
+int function GetSellPrice(Form form) global native
