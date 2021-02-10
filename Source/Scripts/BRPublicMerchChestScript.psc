@@ -1,6 +1,5 @@
 scriptname BRPublicMerchChestScript extends ObjectReference
 
-Keyword property BRLinkMerchShelf auto
 Keyword property BRLinkMerchChest auto
 Actor property PlayerRef auto
 Quest property BRQuest auto
@@ -16,16 +15,6 @@ endEvent
 event OnMenuClose(string menuName)
     if menuName == "ContainerMenu"
         Debug.Trace("BRPublicMerchChestScript container menu closed")
-        BRQuestScript BRScript = BRQuest as BRQuestScript
-        if BRScript.ActiveShopId == BRScript.ShopId
-            ; TODO: the assumption that player is in shop cell may be incorrect
-            Cell shopCell = PlayerRef.GetParentCell()
-
-            bool result = BRMerchandiseList.Create(BRScript.ApiUrl, BRScript.ApiKey, BRScript.ShopId, shopCell, BRScript.ActiveShopShelves, self)
-            if !result
-                Debug.MessageBox("Failed to save shop merchandise.\n\n" + BRScript.BugReportCopy)
-            endif
-        endif
         UnregisterForMenu("ContainerMenu")
         AddInventoryEventFilter(BREmptyFormList)
     endif
@@ -44,8 +33,7 @@ endEvent
 
 event OnActivate(ObjectReference akActionRef)
     if akActionRef == PlayerRef
-        Debug.Trace("BRPublicMerchChestScript container was opened")
-        RegisterForMenu("ContainerMenu")
+        Debug.Trace("BRPublicMerchChestScript container was activated")
     endif
 endEvent
 
@@ -54,8 +42,7 @@ Event OnItemAdded(Form baseItem, int itemCount, ObjectReference itemRef, ObjectR
         BRQuestScript BRScript = BRQuest as BRQuestScript
         Form selectedMerchandiseRepl = BRScript.SelectedMerchandise.GetBaseObject()
         selectedMerchandiseRepl.SetName(baseItem.GetName())
-        ObjectReference shelf = self.GetLinkedRef(BRLinkMerchShelf)
-        ObjectReference privateChest = shelf.GetLinkedRef(BRLinkMerchChest)
+        ObjectReference privateChest = GetLinkedRef(BRLinkMerchChest)
         int price = BRMerchandiseList.GetSellPrice(baseItem)
         if BRSellMerchandise.Show(itemCount, price * itemCount, price) == 0
             debug.Trace("BRPublicMerchChestScript creating sell transaction")

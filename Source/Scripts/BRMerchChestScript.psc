@@ -1,13 +1,6 @@
 scriptname BRMerchChestScript extends ObjectReference
 
-Keyword property BRLinkMerchShelf auto
-Keyword property BRLinkMerchChest auto
 Keyword property BRLinkItemRef auto
-Keyword property BRLinkActivatorRef auto
-Keyword property BRLinkMerchToggle auto
-Keyword property BRLinkMerchNext auto
-Keyword property BRLinkMerchPrev auto
-Activator property ActivatorStatic auto
 Actor property PlayerRef auto
 Quest property BRQuest auto
 MiscObject property Gold001 auto
@@ -32,6 +25,19 @@ event OnMenuClose(string menuName)
         debug.Trace("BRMerchChestScript barter menu closed, stop listending to add/remove events")
         AddInventoryEventFilter(BREmptyFormList)
         UnregisterForMenu("BarterMenu")
+    elseif menuName == "ContainerMenu"
+        debug.Trace("BRMerchChestScript container menu closed")
+        BRQuestScript BRScript = BRQuest as BRQuestScript
+        if BRScript.ActiveShopId == BRScript.ShopId
+            ; TODO: the assumption that player is in shop cell may be incorrect
+            Cell shopCell = PlayerRef.GetParentCell()
+
+            bool result = BRMerchandiseList.Create(BRScript.ApiUrl, BRScript.ApiKey, BRScript.ShopId, shopCell, BRScript.ActiveShopShelves, self)
+            if !result
+                Debug.MessageBox("Failed to save shop merchandise.\n\n" + BRScript.BugReportCopy)
+            endif
+        endif
+        UnregisterForMenu("ContainerMenu")
     endif
 endEvent
 
@@ -39,6 +45,8 @@ event OnMenuOpen(string menuName)
     if menuName == "BarterMenu"
         debug.Trace("BRMerchChestScript barter menu opened, start listening to add/remove events")
         RemoveAllInventoryEventFilters()
+    elseif menuName == "ContainerMenu"
+        debug.Trace("BRMerchChestScript container menu opened")
     endif
 endEvent
 
