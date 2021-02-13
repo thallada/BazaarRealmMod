@@ -142,7 +142,7 @@ state SHOP_NAME
     event OnInputAcceptST(string textInput)
         Debug.Trace("BRMCMConfigMenu BRQuest properties: ShopId: " + BR.ShopId + " ShopName: " + BR.ShopName + " ShopDescription: " + BR.ShopDescription)
         SetInputOptionValueST("Updating...")
-        BR.UpdateShop(BR.ShopId, textInput, BR.ShopDescription)
+        BR.UpdateShop(BR.ShopId, textInput, BR.ShopDescription, BR.ShopGold, BR.ShopType, BR.ShopKeywords, BR.ShopKeywordsExclude)
 
         int attempts = 0
         while !BR.UpdateShopComplete && attempts < 100
@@ -163,7 +163,7 @@ state SHOP_NAME
 
     event OnDefaultST()
         SetInputOptionValueST("Updating...")
-        BR.UpdateShop(BR.ShopId, Game.GetPlayer().GetBaseObject().GetName() + "'s Shop", BR.ShopDescription)
+        BR.UpdateShop(BR.ShopId, Game.GetPlayer().GetBaseObject().GetName() + "'s Shop", BR.ShopDescription, BR.ShopGold, BR.ShopType, BR.ShopKeywords, BR.ShopKeywordsExclude)
 
         int attempts = 0
         while !BR.UpdateShopComplete && attempts < 100
@@ -186,7 +186,7 @@ state SHOP_DESC
 
     event OnInputAcceptST(string textInput)
         SetInputOptionValueST("Updating...")
-        BR.UpdateShop(BR.ShopId, BR.ShopName, textInput)
+        BR.UpdateShop(BR.ShopId, BR.ShopName, textInput, BR.ShopGold, BR.ShopType, BR.ShopKeywords, BR.ShopKeywordsExclude)
 
         int attempts = 0
         while !BR.UpdateShopComplete && attempts < 100
@@ -207,7 +207,7 @@ state SHOP_DESC
 
     event OnDefaultST()
         SetInputOptionValueST("Updating...")
-        BR.UpdateShop(BR.ShopId, BR.ShopName, "")
+        BR.UpdateShop(BR.ShopId, BR.ShopName, "", BR.ShopGold, BR.ShopType, BR.ShopKeywords, BR.ShopKeywordsExclude)
 
         int attempts = 0
         while !BR.UpdateShopComplete && attempts < 100

@@ -61,20 +61,3 @@ Event OnItemAdded(Form baseItem, int itemCount, ObjectReference itemRef, ObjectR
         ; TODO: trade rejection
     endif
 endEvent
-
-event OnCreateMerchandiseSuccess(bool created)
-    Debug.Trace("BRPublicMerchChestScript OnCreateMerchandiseSuccess created: " + created)
-    if created
-        BRQuestScript BRScript = BRQuest as BRQuestScript
-        Debug.Notification("Saved merchandise successfully")
-
-    else
-        Debug.Trace("BRPublicMerchChestScript no container changes to save to the server")
-    endif
-endEvent
-
-event OnCreateMerchandiseFail(string error)
-    Debug.Trace("BRPublicMerchChestScript OnCreateMerchandiseFail error: " + error)
-    BRQuestScript BRScript = BRQuest as BRQuestScript
-    Debug.MessageBox("Failed to save shop merchandise.\n\n" + error + "\n\n" + BRScript.BugReportCopy)
-endEvent

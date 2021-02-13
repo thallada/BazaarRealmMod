@@ -29,6 +29,10 @@ event OnMenuClose(string menuName)
         debug.Trace("BRMerchChestScript container menu closed")
         BRQuestScript BRScript = BRQuest as BRQuestScript
         if BRScript.ActiveShopId == BRScript.ShopId
+            int gold = self.GetItemCount(Gold001)
+            if gold != BRScript.ShopGold
+                BRScript.UpdateShop(BRScript.ShopId, BRScript.ShopName, BRScript.ShopDescription, gold, BRScript.ShopType, BRScript.ShopKeywords, BRScript.ShopKeywordsExclude)
+            endif
             ; TODO: the assumption that player is in shop cell may be incorrect
             Cell shopCell = PlayerRef.GetParentCell()
 
@@ -118,6 +122,22 @@ function RefreshMerchandise()
     endif
 endFunction
 
+event OnCreateMerchandiseSuccess(bool created)
+    Debug.Trace("BRMerchChestScript OnCreateMerchandiseSuccess created: " + created)
+    if created
+        BRQuestScript BRScript = BRQuest as BRQuestScript
+        Debug.Notification("Saved merchandise successfully")
+    else
+        Debug.Trace("BRMerchChestScript no container changes to save to the server")
+    endif
+endEvent
+
+event OnCreateMerchandiseFail(string error)
+    Debug.Trace("BRMerchChestScript OnCreateMerchandiseFail error: " + error)
+    BRQuestScript BRScript = BRQuest as BRQuestScript
+    Debug.MessageBox("Failed to save shop merchandise.\n\n" + error + "\n\n" + BRScript.BugReportCopy)
+endEvent
+
 event OnCreateTransactionSuccess(int id, int quantity, int amount)
     debug.Trace("BRMerchChestScript OnCreateTransactionSuccess id: " + id + " quantity: " + quantity + " amount: " + amount)
     ObjectReference merchRef = self.GetLinkedRef(BRLinkItemRef)
@@ -135,6 +155,10 @@ endEvent
 event OnLoadMerchandiseSuccess(bool result)
     Debug.Trace("BRMerchChestScript OnLoadMerchandiseSuccess result: " + result)
     debug.MessageBox("Successfully loaded shop merchandise")
+    BRQuestScript BRScript = BRQuest as BRQuestScript
+    if !BRShop.RefreshGold(BRScript.ApiUrl, BRScript.ApiKey, BRScript.ActiveShopId, self)
+        Debug.MessageBox("Failed to refresh shop gold.\n\n" + BRScript.BugReportCopy)
+    endif
 
     ; TODO: the assumption that player is in shop cell may be incorrect
     Cell shopCell = PlayerRef.GetParentCell()
@@ -165,4 +189,19 @@ event OnLoadShelfPageFail(string error)
     Debug.Trace("BRMerchChestScript OnLoadShelfPageFail error: " + error)
     BRQuestScript BRScript = BRQuest as BRQuestScript
     Debug.MessageBox("Failed to load or clear page of shelf merchandise.\n\n" + error + "\n\n" + BRScript.BugReportCopy)
+endEvent
+
+event OnRefreshShopGoldSuccess(int gold)
+    Debug.Trace("BRMerchChestScript OnRefreshShopGoldSuccess gold: " + gold)
+    BRQuestScript BRScript = BRQuest as BRQuestScript
+    BRScript.ActiveShopGold = gold
+    if BRScript.ActiveShopId == BRScript.ShopId
+        BRScript.ShopGold = gold
+    endif
+endEvent
+
+event OnRefreshShopGoldFail(string error)
+    Debug.Trace("BRMerchChestScript OnRefreshShopGoldFail error: " + error)
+    BRQuestScript BRScript = BRQuest as BRQuestScript
+    Debug.MessageBox("Failed to refresh shop gold.\n\n" + error + "\n\n" + BRScript.BugReportCopy)
 endEvent

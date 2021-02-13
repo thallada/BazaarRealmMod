@@ -11,6 +11,10 @@ int property OwnerId auto
 int property ShopId auto
 string property ShopName auto
 string property ShopDescription auto
+int property ShopGold auto
+string property ShopType auto
+Keyword[] property ShopKeywords auto
+bool property ShopKeywordsExclude auto
 ; TODO: look up interior refs and merch by shop id instead of saving this?
 int property InteriorRefListId auto
 ; Active shop data (for the currently loaded shop)
@@ -18,6 +22,10 @@ int property ActiveOwnerId auto
 int property ActiveShopId auto
 string property ActiveShopName auto
 string property ActiveShopDescription auto
+int property ActiveShopGold auto
+string property ActiveShopType auto
+Keyword[] property ActiveShopKeywords auto
+bool property ActiveShopKeywordsExclude auto
 ObjectReference[] property ActiveShopShelves auto
 ; references
 Actor property PlayerRef auto
@@ -109,11 +117,15 @@ event OnCreateOwnerFail(string error)
     StartModFailed = true
 endEvent
 
-event OnCreateShopSuccess(int id, string name, string description)
-    Debug.Trace("BRQuestScript OnCreateShopSucess id: " + id + " name: " + name + " description: " + description)
+event OnCreateShopSuccess(int id, string name, string description, int gold, string shop_type, Keyword[] keywords, bool keywords_exclude)
+    Debug.Trace("BRQuestScript OnCreateShopSucess id: " + id + " name: " + name + " description: " + description + " gold: " + gold + " shop_type: " + shop_type + " keywords: " + keywords + " keywords_exclude: " + keywords_exclude)
     ShopId = id
     ShopName = name
     ShopDescription = description
+    ShopGold = gold
+    ShopType = shop_type
+    ShopKeywords = keywords
+    ShopKeywordsExclude = keywords_exclude
     Debug.Notification("Initialized Bazaar Realm client")
 endEvent
 
@@ -157,6 +169,14 @@ bool function LoadInteriorRefs()
         ActiveShopId = ShopId
         ActiveShopName = ShopName
         ActiveShopDescription = ShopDescription
+        ActiveShopGold = ShopGold
+        ActiveShopType = ShopType
+        ActiveShopKeywords = ShopKeywords
+        ActiveShopKeywordsExclude = ShopKeywordsExclude
+        result = BRShop.SetVendorKeywords(ActiveShopKeywords, ActiveShopKeywordsExclude)
+        if !result
+            Debug.MessageBox("Failed to set shop vendor keywords\n\n" + BugReportCopy)
+        endif
         return true
     else
         Debug.MessageBox("Failed to load shop.\n\n" + BugReportCopy)
@@ -171,6 +191,7 @@ event OnLoadInteriorRefListSuccess(bool result, ObjectReference[] shelves)
     Debug.MessageBox("Successfully loaded shop")
     ; TODO: the assumption that player is in shop cell may be incorrect
     Cell shopCell = PlayerRef.GetParentCell()
+    ; TODO: load vendors from API response here
 
     if !BRMerchandiseList.Load(ApiUrl, ApiKey, ActiveShopId, shopCell, ActiveShopShelves, PrivateChest)
         Debug.MessageBox("Failed to load shop merchandise.\n\n" + BugReportCopy)
@@ -195,21 +216,33 @@ int function ListMerchandise()
     UILib.ShowNotification("Chose " + options[selectedIndex], "#74C56D")
 endFunction
 
-function UpdateShop(int id, string name, string description)
-    Debug.Trace("BRQuestScript UpdateShop id: " + id + " name: " + name + " description: " + description)
+function UpdateShop(int id, string name, string description, int gold, string shopType, Keyword[] keywords, bool keywordsExclude)
+    Debug.Trace("BRQuestScript UpdateShop id: " + id + " name: " + name + " description: " + description + " gold: " + gold + " shopType: " + shopType + " keywords: " + keywords + " keywordsExclude: " + keywordsExclude)
     UpdateShopComplete = false
-    bool result = BRShop.Update(ApiUrl, ApiKey, id, name, description, self)
+    bool result = BRShop.Update(ApiUrl, ApiKey, id, name, description, gold, shopType, keywords, keywordsExclude, self)
     if !result
         Debug.MessageBox("Failed to update shop.\n\n" + BugReportCopy)
         UpdateShopComplete = true
     endif
 endFunction
 
-event OnUpdateShopSuccess(int id, string name, string description)
-    Debug.Trace("BRQuestScript OnUpdateShopSucess id: " + id + " name: " + name + " description: " + description)
+event OnUpdateShopSuccess(int id, string name, string description, int gold, string shopType, Keyword[] keywords, bool keywordsExclude)
+    Debug.Trace("BRQuestScript OnUpdateShopSuccess id: " + id + " name: " + name + " description: " + description + " gold: " + gold + " shopType: " + shopType + " keywords: " + keywords + " keywordsExclude: " + keywordsExclude)
     ShopId = id
     ShopName = name
     ShopDescription = description
+    ShopGold = gold
+    ShopType = shopType
+    ShopKeywords = keywords
+    ShopKeywordsExclude = keywordsExclude
+    if ActiveShopId == ShopId
+        ActiveShopName = name
+        ActiveShopDescription = description
+        ActiveShopGold = gold
+        ActiveShopType = shopType
+        ActiveShopKeywords = keywords
+        ActiveShopKeywordsExclude = keywordsExclude
+    endif
     UpdateShopComplete = true
 endEvent
 
@@ -229,11 +262,25 @@ function GetShop(int id)
     endif
 endFunction
 
-event OnGetShopSuccess(int id, string name, string description)
-    Debug.Trace("BRQuestScript OnGetShopSucess id: " + id + " name: " + name + " description: " + description)
-    ShopId = id
-    ShopName = name
-    ShopDescription = description
+event OnGetShopSuccess(int id, string name, string description, int gold, string shop_type, Keyword[] keywords, bool keywords_exclude)
+    Debug.Trace("BRQuestScript OnGetShopSucess id: " + id + " name: " + name + " description: " + description + " gold: " + gold + " shop_type: " + shop_type + " keywords: " + keywords + " keywords_exclude: " + keywords_exclude)
+    ; TODO: is this logic right?
+    if ShopId == id
+        ShopName = name
+        ShopDescription = description
+        ShopGold = gold
+        ShopType = shop_type
+        ShopKeywords = keywords
+        ShopKeywordsExclude = keywords_exclude
+    else
+        ActiveShopId = id
+        ActiveShopName = name
+        ActiveShopDescription = description
+        ActiveShopGold = gold
+        ActiveShopType = shop_type
+        ActiveShopKeywords = keywords
+        ActiveShopKeywordsExclude = keywords_exclude
+    endIf
     GetShopComplete = true
 endEvent
 
@@ -253,8 +300,9 @@ function ListShops()
     endif
 endFunction
 
-event OnListShopsSuccess(int[] ids, string[] names, string[] descriptions)
-    Debug.Trace("BRQuestScript OnListShopsSuccess ids.length: " + ids.Length + " names.length: " + names.Length + " descriptions.length: " + descriptions.Length)
+event OnListShopsSuccess(int[] ids, string[] names, string[] descriptions, int[] golds, string[] shop_types, Keyword[] keywords, bool[] keywords_excludes)
+    Debug.Trace("BRQuestScript OnListShopsSuccess ids.length: " + ids.Length + " names.length: " + names.Length + " descriptions.length: " + descriptions.Length + " golds.length: " + golds.length + \
+                " shop_types.length: " + shop_types.length + " keywords.length: " + keywords.length + " keywords_excludes: " + keywords_excludes.length)
     int index = 0
     int selectedIndex = UILib.ShowList("Shop Merchandise", names, 0, 0)
     ListShopsComplete = true
@@ -263,8 +311,17 @@ event OnListShopsSuccess(int[] ids, string[] names, string[] descriptions)
         ActiveShopId = ids[selectedIndex]
         ActiveShopName = names[selectedIndex]
         ActiveShopDescription = descriptions[selectedIndex]
+        ActiveShopGold = golds[selectedIndex]
+        ActiveShopType = shop_types[selectedIndex]
+        ActiveShopKeywords = BRShop.GetKeywordsSubArray(keywords, selectedIndex)
+        Debug.Trace("BRQuestScript OnListShopsSuccess ActiveShopKeywords: " + ActiveShopKeywords)
+        ActiveShopKeywordsExclude = keywords_excludes[selectedIndex]
+        bool result = BRShop.SetVendorKeywords(ActiveShopKeywords, ActiveShopKeywordsExclude)
+        if !result
+            Debug.MessageBox("Failed to set shop vendor keywords\n\n" + BugReportCopy)
+        endif
         ShopDetailMessage.SetName(names[selectedIndex])
-        bool result = BRInteriorRefList.ClearCell()
+        result = BRInteriorRefList.ClearCell()
         if !result
             Debug.MessageBox("Failed to clear existing shop before loading in new shop.\n\n" + BugReportCopy)
         endif
