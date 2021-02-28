@@ -14,6 +14,7 @@ ObjectReference property soldItemRef auto
 Form property soldItemBase auto
 int property soldItemQuantity auto
 int property soldAmount auto
+bool property pendingTransaction auto
 
 event OnInit()
     debug.Trace("BRMerchChestScript OnInit")
@@ -57,14 +58,20 @@ endEvent
 Event OnItemRemoved(Form baseItem, int itemCount, ObjectReference itemRef, ObjectReference destContainer)
     if destContainer == PlayerRef
         debug.Trace("BRMerchChestScript item moved to player: " + itemRef + " " + baseItem + " " + itemCount)
-        if baseItem == Gold001 as Form
-            soldAmount = itemCount
-            MaybeCreateTransaction()
+        if pendingTransaction
+            debug.Notification("Previous transaction still in progress! Cancelling new transaction.")
+            ; TODO: undo transaction
+            ; PlayerRef.RemoveItem(baseItem, itemCount, self)
         else
-            boughtItemRef = itemRef
-            boughtItemBase = baseItem
-            boughtItemQuantity = itemCount
-            MaybeCreateTransaction()
+            if baseItem == Gold001 as Form
+                soldAmount = itemCount
+                MaybeCreateTransaction()
+            else
+                boughtItemRef = itemRef
+                boughtItemBase = baseItem
+                boughtItemQuantity = itemCount
+                MaybeCreateTransaction()
+            endif
         endif
     endif
 endEvent
@@ -72,14 +79,19 @@ endEvent
 Event OnItemAdded(Form baseItem, int itemCount, ObjectReference itemRef, ObjectReference sourceContainer)
     if sourceContainer == PlayerRef
         debug.Trace("BRMerchChestScript item moved to container from player: " + itemRef + " " + baseItem + " " + itemCount)
-        if baseItem == Gold001 as Form
-            boughtAmount = itemCount
-            MaybeCreateTransaction()
+        if pendingTransaction
+            ; self.RemoveItem(baseItem, itemCount, PlayerRef)
+            ; TODO: undo transaction
         else
-            soldItemRef = itemRef
-            soldItemBase = baseItem
-            soldItemQuantity = itemCount
-            MaybeCreateTransaction()
+            if baseItem == Gold001 as Form
+                boughtAmount = itemCount
+                MaybeCreateTransaction()
+            else
+                soldItemRef = itemRef
+                soldItemBase = baseItem
+                soldItemQuantity = itemCount
+                MaybeCreateTransaction()
+            endif
         endif
     endif
 endEvent
@@ -88,25 +100,19 @@ function MaybeCreateTransaction()
     if boughtAmount > 0 && boughtItemBase && boughtItemQuantity > 0
         debug.Trace("BRMerchChestScript MaybeCreateTransaction creating buy transaction")
         BRQuestScript BRScript = BRQuest as BRQuestScript
+        pendingTransaction = true
         bool result = BRTransaction.CreateFromVendorSale(BRScript.ApiUrl, BRScript.ApiKey, BRScript.ActiveShopId, false, boughtItemQuantity, boughtAmount, boughtItemBase, self)
         if !result
             Debug.MessageBox("Failed to buy merchandise.\n\n" + BRScript.BugReportCopy)
         endif
-        boughtAmount = 0
-        boughtItemBase = None
-        boughtItemRef = None
-        boughtItemQuantity = 0
     elseif soldAmount > 0 && soldItemBase && soldItemQuantity > 0
         debug.Trace("BRMerchChestScript MaybeCreateTransaction creating sell transaction")
         BRQuestScript BRScript = BRQuest as BRQuestScript
+        pendingTransaction = true
         bool result = BRTransaction.CreateFromVendorSale(BRScript.ApiUrl, BRScript.ApiKey, BRScript.ActiveShopId, true, soldItemQuantity, soldAmount, soldItemBase, self)
         if !result
             Debug.MessageBox("Failed to sell merchandise.\n\n" + BRScript.BugReportCopy)
         endif
-        soldAmount = 0
-        soldItemBase = None
-        soldItemRef = None
-        soldItemQuantity = 0
     else
         debug.Trace("BRMerchChestScript MaybeCreateTransaction sale not yet finalized")
     endif
@@ -132,23 +138,59 @@ event OnCreateMerchandiseSuccess(bool created)
     endif
 endEvent
 
-event OnCreateMerchandiseFail(string error)
-    Debug.Trace("BRMerchChestScript OnCreateMerchandiseFail error: " + error)
+event OnCreateMerchandiseFail(bool isServerError, int status, string title, string detail, string otherError)
     BRQuestScript BRScript = BRQuest as BRQuestScript
-    Debug.MessageBox("Failed to save shop merchandise.\n\n" + error + "\n\n" + BRScript.BugReportCopy)
+    if isServerError
+        Debug.Trace("BRMerchChestScript OnCreateMerchandiseFail server error: " + status + " " + title + ": " + detail)
+        Debug.MessageBox("Failed to save shop merchandise.\n\nServer " + status + " " + title + ": " + detail + "\n\n" + BRScript.BugReportCopy)
+    else
+        Debug.Trace("BRMerchChestScript OnCreateMerchandiseFail other error: " + otherError)
+        Debug.MessageBox("Failed to save shop merchandise.\n\n" + otherError + "\n\n" + BRScript.BugReportCopy)
+    endif
 endEvent
 
 event OnCreateTransactionSuccess(int id, int quantity, int amount)
     debug.Trace("BRMerchChestScript OnCreateTransactionSuccess id: " + id + " quantity: " + quantity + " amount: " + amount)
     ObjectReference merchRef = self.GetLinkedRef(BRLinkItemRef)
     RefreshMerchandise()
+    pendingTransaction = false
+    boughtAmount = 0
+    boughtItemBase = None
+    boughtItemRef = None
+    boughtItemQuantity = 0
+    soldAmount = 0
+    soldItemBase = None
+    soldItemRef = None
+    soldItemQuantity = 0
 endEvent
 
 ; TODO: gracefully handle expected error cases (e.g. someone else buys all of item before this player can buy them)
-Event OnCreateTransactionFail(string error)
-    Debug.Trace("BRMerchChestScript OnCreateTransactionFail error: " + error)
+Event OnCreateTransactionFail(bool isServerError, int status, string title, string detail, string otherError)
     BRQuestScript BRScript = BRQuest as BRQuestScript
-    Debug.MessageBox("Failed to buy merchandise.\n\n" + error + "\n\n" + BRScript.BugReportCopy)
+    if isServerError
+        Debug.Trace("BRMerchChestScript OnCreateTransactionFail server error: " + status + " " + title + ": " + detail)
+        Debug.MessageBox("Failed to buy or sell merchandise.\n\nServer " + status + " " + title + ": " + detail + "\n\n" + BRScript.BugReportCopy)
+    else
+        Debug.Trace("BRMerchChestScript OnCreateTransactionFail other error: " + otherError)
+        Debug.MessageBox("Failed to buy or sell merchandise.\n\n" + otherError + "\n\n" + BRScript.BugReportCopy)
+    endif
+    ; TODO Undo transaction
+    ; if boughtItemBase
+        ; PlayerRef.RemoveItem(boughtItemBase, boughtItemQuantity, self)
+        ; PlayerRef.AddItem(Gold001, boughtAmount)
+    ; elseif soldItemBase
+        ; self.RemoveItem(soldItemBase, soldItemQuantity, PlayerRef)
+        ; self.AddItem(Gold001, soldAmount)
+    ; endif
+    pendingTransaction = false
+    boughtAmount = 0
+    boughtItemBase = None
+    boughtItemRef = None
+    boughtItemQuantity = 0
+    soldAmount = 0
+    soldItemBase = None
+    soldItemRef = None
+    soldItemQuantity = 0
     RefreshMerchandise()
 endEvent
 
@@ -168,10 +210,15 @@ event OnLoadMerchandiseSuccess(bool result)
     endWhile
 endEvent
 
-event OnLoadMerchandiseFail(string error)
-    Debug.Trace("BRMerchChestScript OnLoadMerchandiseFail error: " + error)
+event OnLoadMerchandiseFail(bool isServerError, int status, string title, string detail, string otherError)
     BRQuestScript BRScript = BRQuest as BRQuestScript
-    Debug.MessageBox("Failed to load or clear shop merchandise.\n\n" + error + "\n\n" + BRScript.BugReportCopy)
+    if isServerError
+        Debug.Trace("BRMerchChestScript OnLoadMerchandiseFail server error: " + status + " " + title + ": " + detail)
+        Debug.MessageBox("Failed to load or clear shop merchandise.\n\nServer " + status + " " + title + ": " + detail + "\n\n" + BRScript.BugReportCopy)
+    else
+        Debug.Trace("BRMerchChestScript OnLoadMerchandiseFail other error: " + otherError)
+        Debug.MessageBox("Failed to load or clear shop merchandise.\n\n" + otherError + "\n\n" + BRScript.BugReportCopy)
+    endif
 endEvent
 
 event OnLoadShelfPageSuccess(bool result)
@@ -185,10 +232,15 @@ event OnLoadShelfPageSuccess(bool result)
     endWhile
 endEvent
 
-event OnLoadShelfPageFail(string error)
-    Debug.Trace("BRMerchChestScript OnLoadShelfPageFail error: " + error)
+event OnLoadShelfPageFail(bool isServerError, int status, string title, string detail, string otherError)
     BRQuestScript BRScript = BRQuest as BRQuestScript
-    Debug.MessageBox("Failed to load or clear page of shelf merchandise.\n\n" + error + "\n\n" + BRScript.BugReportCopy)
+    if isServerError
+        Debug.Trace("BRMerchChestScript OnLoadShelfPageFail server error: " + status + " " + title + ": " + detail)
+        Debug.MessageBox("Failed to load or clear page of shelf merchandise.\n\nServer " + status + " " + title + ": " + detail + "\n\n" + BRScript.BugReportCopy)
+    else
+        Debug.Trace("BRMerchChestScript OnLoadShelfPageFail other error: " + otherError)
+        Debug.MessageBox("Failed to load or clear page of shelf merchandise.\n\n" + otherError + "\n\n" + BRScript.BugReportCopy)
+    endif
 endEvent
 
 event OnRefreshShopGoldSuccess(int gold)
@@ -200,8 +252,13 @@ event OnRefreshShopGoldSuccess(int gold)
     endif
 endEvent
 
-event OnRefreshShopGoldFail(string error)
-    Debug.Trace("BRMerchChestScript OnRefreshShopGoldFail error: " + error)
+event OnRefreshShopGoldFail(bool isServerError, int status, string title, string detail, string otherError)
     BRQuestScript BRScript = BRQuest as BRQuestScript
-    Debug.MessageBox("Failed to refresh shop gold.\n\n" + error + "\n\n" + BRScript.BugReportCopy)
+    if isServerError
+        Debug.Trace("BRMerchChestScript OnRefreshShopGoldFail server error: " + status + " " + title + ": " + detail)
+        Debug.MessageBox("Failed to refresh shop gold.\n\nServer " + status + " " + title + ": " + detail + "\n\n" + BRScript.BugReportCopy)
+    else
+        Debug.Trace("BRMerchChestScript OnRefreshShopGoldFail other error: " + otherError)
+        Debug.MessageBox("Failed to refresh shop gold.\n\n" + otherError + "\n\n" + BRScript.BugReportCopy)
+    endif
 endEvent

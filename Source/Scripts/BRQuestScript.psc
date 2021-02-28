@@ -94,9 +94,14 @@ event OnStatusCheckSuccess(bool result)
     endif
 endEvent
 
-event OnStatusCheckFail(string error)
-    Debug.Trace("BRQuestScript OnStatusCheckFail error: " + error)
-    Debug.MessageBox("Failed to initialize Bazaar Realm client.\n\n" + error + "\n\nThe API server might be down: " + ApiUrl)
+event OnStatusCheckFail(bool isServerError, int status, string title, string detail, string otherError)
+    if isServerError
+        Debug.Trace("BRMerchChestScript OnStatusCheckFail server error: " + status + " " + title + ": " + detail)
+        Debug.MessageBox("Failed to initialize Bazaar Realm client.\n\nServer " + status + " " + title + ": " + detail + "\n\nThe API server might be down: " + ApiUrl)
+    else
+        Debug.Trace("BRMerchChestScript OnStatusCheckFail other error: " + otherError)
+        Debug.MessageBox("Failed to initialize Bazaar Realm client.\n\n" + otherError + "\n\nThe API server might be down: " + ApiUrl)
+    endif
     StartModFailed = true
 endEvent
 
@@ -111,9 +116,14 @@ event OnCreateOwnerSuccess(int id)
     endif
 endEvent
 
-event OnCreateOwnerFail(string error)
-    Debug.Trace("BRQuestScript OnCreateOwnerFail error: " + error)
-    Debug.MessageBox("Failed to create new owner in the API.\n\n" + error + "\n\n" + BugReportCopy)
+event OnCreateOwnerFail(bool isServerError, int status, string title, string detail, string otherError)
+    if isServerError
+        Debug.Trace("BRMerchChestScript OnCreateOwnerFail server error: " + status + " " + title + ": " + detail)
+        Debug.MessageBox("Failed to create a new owner in the API.\n\nServer " + status + " " + title + ": " + detail + "\n\n" + BugReportCopy)
+    else
+        Debug.Trace("BRMerchChestScript OnCreateOwnerFail other error: " + otherError)
+        Debug.MessageBox("Failed to create a new owner in the API.\n\n" + otherError + "\n\n" + BugReportCopy)
+    endif
     StartModFailed = true
 endEvent
 
@@ -129,9 +139,14 @@ event OnCreateShopSuccess(int id, string name, string description, int gold, str
     Debug.Notification("Initialized Bazaar Realm client")
 endEvent
 
-event OnCreateShopFail(string error)
-    Debug.Trace("BRQuestScript OnCreateShopFail error: " + error)
-    Debug.MessageBox("Failed to initialize Bazaar Realm client.\n\n" + error + "\n\n" + BugReportCopy)
+event OnCreateShopFail(bool isServerError, int status, string title, string detail, string otherError)
+    if isServerError
+        Debug.Trace("BRMerchChestScript OnCreateShopFail server error: " + status + " " + title + ": " + detail)
+        Debug.MessageBox("Failed to create a new shop in the API.\n\nServer " + status + " " + title + ": " + detail + "\n\n" + BugReportCopy)
+    else
+        Debug.Trace("BRMerchChestScript OnCreateShopFail other error: " + otherError)
+        Debug.MessageBox("Failed to create a new shop in the API.\n\n" + otherError + "\n\n" + BugReportCopy)
+    endif
     StartModFailed = true
 endEvent
 
@@ -152,9 +167,14 @@ event OnCreateInteriorRefListSuccess(int id)
     Debug.MessageBox("Successfully saved shop.")
 endEvent
 
-event OnCreateInteriorRefListFail(string error)
-    Debug.Trace("BRQuestScript OnCreateInteriorRefListFail error: " + error)
-    Debug.MessageBox("Failed to save shop.\n\n" + error + "\n\n" + BugReportCopy)
+event OnCreateInteriorRefListFail(bool isServerError, int status, string title, string detail, string otherError)
+    if isServerError
+        Debug.Trace("BRMerchChestScript OnCreateInteriorRefListFail server error: " + status + " " + title + ": " + detail)
+        Debug.MessageBox("Failed to save shop.\n\nServer " + status + " " + title + ": " + detail + "\n\n" + BugReportCopy)
+    else
+        Debug.Trace("BRMerchChestScript OnCreateInteriorRefListFail other error: " + otherError)
+        Debug.MessageBox("Failed to save shop.\n\n" + otherError + "\n\n" + BugReportCopy)
+    endif
 endEvent
 
 bool function LoadInteriorRefs()
@@ -198,9 +218,14 @@ event OnLoadInteriorRefListSuccess(bool result, ObjectReference[] shelves)
     endif
 endEvent
 
-event OnLoadInteriorRefListFail(string error)
-    Debug.Trace("BRQuestScript OnLoadInteriorRefListFail error: " + error)
-    Debug.MessageBox("Failed to load shop.\n\n" + error + "\n\n" + BugReportCopy)
+event OnLoadInteriorRefListFail(bool isServerError, int status, string title, string detail, string otherError)
+    if isServerError
+        Debug.Trace("BRMerchChestScript OnLoadInteriorRefListFail server error: " + status + " " + title + ": " + detail)
+        Debug.MessageBox("Failed to load shop.\n\nServer " + status + " " + title + ": " + detail + "\n\n" + BugReportCopy)
+    else
+        Debug.Trace("BRMerchChestScript OnLoadInteriorRefListFail other error: " + otherError)
+        Debug.MessageBox("Failed load shop.\n\n" + otherError + "\n\n" + BugReportCopy)
+    endif
 endEvent
 
 ; currently unused, was testing out UILib
@@ -246,9 +271,14 @@ event OnUpdateShopSuccess(int id, string name, string description, int gold, str
     UpdateShopComplete = true
 endEvent
 
-event OnUpdateShopFail(string error)
-    Debug.Trace("BRQuestScript OnUpdateShopFail error: " + error)
-    Debug.MessageBox("Failed to update shop.\n\n" + error + "\n\n" + BugReportCopy)
+event OnUpdateShopFail(bool isServerError, int status, string title, string detail, string otherError)
+    if isServerError
+        Debug.Trace("BRMerchChestScript OnUpdateShopFail server error: " + status + " " + title + ": " + detail)
+        Debug.MessageBox("Failed to update shop.\n\nServer " + status + " " + title + ": " + detail + "\n\n" + BugReportCopy)
+    else
+        Debug.Trace("BRMerchChestScript OnUpdateShopFail other error: " + otherError)
+        Debug.MessageBox("Failed to update shop.\n\n" + otherError + "\n\n" + BugReportCopy)
+    endif
     UpdateShopComplete = true
 endEvent
 
@@ -284,9 +314,14 @@ event OnGetShopSuccess(int id, string name, string description, int gold, string
     GetShopComplete = true
 endEvent
 
-event OnGetShopFail(string error)
-    Debug.Trace("BRQuestScript OnGetShopFail error: " + error)
-    Debug.MessageBox("Failed to get shop.\n\n" + error + "\n\n" + BugReportCopy)
+event OnGetShopFail(bool isServerError, int status, string title, string detail, string otherError)
+    if isServerError
+        Debug.Trace("BRMerchChestScript OnGetShopFail server error: " + status + " " + title + ": " + detail)
+        Debug.MessageBox("Failed to get shop.\n\nServer " + status + " " + title + ": " + detail + "\n\n" + BugReportCopy)
+    else
+        Debug.Trace("BRMerchChestScript OnGetShopFail other error: " + otherError)
+        Debug.MessageBox("Failed to get shop.\n\n" + otherError + "\n\n" + BugReportCopy)
+    endif
     GetShopComplete = true
 endEvent
 
@@ -334,8 +369,13 @@ event OnListShopsSuccess(int[] ids, string[] names, string[] descriptions, int[]
     endif
 endEvent
 
-event OnListShopsFail(string error)
-    Debug.Trace("BRQuestScript OnListShopsFail error: " + error)
-    Debug.MessageBox("Failed to list shops.\n\n" + error + "\n\n" + BugReportCopy)
+event OnListShopsFail(bool isServerError, int status, string title, string detail, string otherError)
+    if isServerError
+        Debug.Trace("BRMerchChestScript OnListShopsFail server error: " + status + " " + title + ": " + detail)
+        Debug.MessageBox("Failed to list shops.\n\nServer " + status + " " + title + ": " + detail + "\n\n" + BugReportCopy)
+    else
+        Debug.Trace("BRMerchChestScript OnListShopsFail other error: " + otherError)
+        Debug.MessageBox("Failed to list shops.\n\n" + otherError + "\n\n" + BugReportCopy)
+    endif
     ListShopsComplete = true
 endEvent
